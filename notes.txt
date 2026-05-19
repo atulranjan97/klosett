@@ -1,0 +1,409 @@
+A shared component is just a component that has other components inside of it
+We bring the `Header` component in root layout and not the main layout
+We are using `lucide-react` package for icons. (npm i lucide-react)
+The Button element we used in the `Header` component is going to have a link inside of it coz it's not an actual button with like a click handler. I just want to have a link inside of it. so we're gonna add the `asChild` attribute(or prop) on button and then we can change the look of the button by adding a `varient='ghost'` on that button
+
+***asChild***
+The Button in navbar is gonna have a link inside of it because it's not an actual button with like a click handler. We just want to have a link inside of it so we're gonna add the `asChild` attribute(or prop)
+
+`asChild` prop (jo libraries jaise Radix UI aur shadcn/ui me use hota hai) ka use hota hai component ka default HTML element change karne ke liye. Matlab agar Button normally <button> render karta hai, to `asChild` use karke tum usko <a> ya koi aur element bana sakte ho, bina styles ya behavior lose kiye. Ye internally child element ko props pass karta hai, jisse woh child hi actual element ban jata hai but Button jaisa dikhta aur behave karta hai.
+******
+
+
+`Footer` is not a shared component like Header because it doesn't have any embedded components in it so we're gonna put it directly in the components folder
+
+***Theme toggle***
+The way it works is with a package called `next-themes`. so we need to install that.
+npm i next-themes
+npx shadcn@latest add dropdown-menu
+We're gonna first off add the theme provider because in order to change the theme and have that functionality, you need to wrap your page in the provider, so we're gonna do that in the main layout and not the root layout
+
+layout.tsx
+  import { ThemeProvider } from 'next-themes';
+
+  <html lang="en" className={`${inter.className}  h-full antialiased`}>
+    <body className="min-h-full flex flex-col">
+      <ThemeProvider
+        attribute="class"
+        defaultTheme="light"
+        enableSystem
+        disableTransitionOnChange
+      >
+        {children}
+      </ThemeProvider>
+    </body>
+  </html>
+
+`enableSystem` - this will enable us to have that option of not just light and dark, but also the system theme.
+`disableTransitionOnChange`: this will disable all CSS transitions when switching themes and that's to avoid certain issues with transitions.
+
+Now another thing we're gonna add is in the html tag we're gonna have the `suppressHydrationWarning` because there are some things that you're gonna run into and there's something else we have to do to fix this as well. But basically `next-themes` uses the window object to deal with the changing of the theme and the server doesn't have a window object, So, it's gonna tell us in the console that there's a mismatch between the server code and the client code. And this is part of what we need to do to stop that.
+
+layout.tsx
+  <html lang="en" className={`${inter.className}  h-full antialiased`} suppressHydrationWarning>
+    <body className="min-h-full flex flex-col">
+      <ThemeProvider
+        attribute="class"
+        defaultTheme="light"
+        enableSystem
+        disableTransitionOnChange
+      >
+        {children}
+      </ThemeProvider>
+    </body>
+  </html>
+
+Create a `ModeToggle` component in Header folder of shared component
+Now, we're gonna be using some hooks in this `ModeToggle` component and in order to use hooks or event handlers or anything that's going to be dynamic on the client side, we have to make this a client side component by adding `use client` directive at the top, because by default all components are rendered on the server with `Next.js`
+
+Make sure the component is mounted before it uses the theme or before it changes the theme
+
+***Not Found***
+To create custom Not Found Page, create a file `not-found.tsx` in the app router
+This NotFoundPage gonna have a button  with an onClic which means that we need to make this a clien component.
+
+***Responsive sheet menu***
+Now we're gonna create a sheet menu, If you go to shadcn website and if you clicked Sheet in components section and click open then you can see the sheet component which we will going to add in our app 
+
+npx shadcn@latest add sheet
+
+
+#####################################sample product and product list ########################################
+slug: slug is just basically the name that is in the URL format(so lowercase with dashes). 
+we wanna display the product in component called productlist, so let's create that in component folder -> shared -> we're gonna have a new folder called product and this will have components in it that are associated with products
+
+  const ProductList = ({
+    data,
+    title,
+    limit,
+  }: {
+    data: any;
+    title?: string;
+    limit?: number;
+  }) => {
+    const limitedData = limit ? data.slice(0, limit) : data;
+
+    return (
+      <div className="my-10">
+        <h2 className="h2-bold mb-4">{title}</h2>
+        {data.length > 0 ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+            {limitedData.map((product: any) => (
+              <div key={product.name} className="">
+                {product.name}
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="">
+            <p className="">No product found</p>
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  export default ProductList;
+
+// this component is gonna take in a couple props so we wanna destructure and it's going to have the `data` and also a `title` that will just be put into an h2 at the top, and the title is optional, {data, title}
+// for the types, we set data to be any, Now you shouldn't really use `any` in TS as it kind of defeats the purpose, later on we're gonna create a product type and this will be instead of any, it'll be product but that doesn't exist yet, so for now we're just putting any
+// title?: string -> that ? symbol signifies optional
+
+############################################# Product Card component ############################################
+Now, we're creating product card component
+but first we're going to install the shadcn card UI component because that's what we'll be using 
+npx shadcn@latest add card
+In product folder (inside shared folder) we're gonna create `product-card.tsx`
+
+***Product Price component***
+we're gonna create seperate component for it
+component-> shared -> product -> create a new file `product-price.tsx`
+This component will take in a `value` and an optional `className` as prop 
+We want the className to be dynamic, it's always gonna have a class of `text-2xl` but if we pass in the className prop, then I wanna use that as well
+And to do that we need to import a special utility function called `cn` and that's in your '@/lib/utils'
+import { cn } from "@/lib/utils";
+This 'cn' function is used for dynamic classes
+
+
+################################### PostgreSQL and Prisma setup ##################################
+Now we're going to setup our DB which ultimately is going to come from `Neon` which is a serverless platform that offers cloud Postgres databases. And they have very generous free tier.
+You can setup you database through the Neon interface if you want. However, Vercel now offers Neon databases right through their interface, and since we're using Vercel for production, we might as well use that.
+- login to Vercel
+- Go to Dashboard
+
+Setup you DB
+
+We now have a cloud postgres database. And this gives you a bunch of information like `DATABASE_URL` etc. If you click `show secret`, you can see the secret key. 
+Now we're going to want to put this in our .env but don't do that just yet because when we initialize Prisma then it actually adds this for you.
+Now Prisma is an ORM(Object Relational Mapper), and it allows us to interact with our database with just a ton of different methods, whether, to create, read, update and delete and bunch of other stuffs. 
+And then we can also map our models or map our schema with models, and we can use those models to create migrations so that we can easily create tables and fields and so on.
+So, it's extremely powerful, it's easily integrates with TS very well, So, that's what we'll be using.
+
+Inside your project folder:
+  npm i -D prisma @prisma/client
+
+Then initialize Prisma:
+  npx prisma init
+
+This creates:
+  prisma/
+    schema.prisma (and this is where we create all of our models)
+
+  .env
+
+Install `Prisma` extension by prisma.io (highly recommended). It gives you syntax highlighting, auto completion and you can set it to use the formatter.
+You do have to add to your 
+ctrl + shift + p
+choose:   Preferences: Open User Settings(JSON)
+Add the following if it is not added already: 
+
+  "[prisma]": {
+    "editor.defaultFormatter": "Prisma.prisma"
+  }
+
+and by this you can format the .prisma file by using ctrl+s command
+
+######################################### Prisma models and migrations #############################
+Now we're going to talk about prisma models which are extremely important because models are used to create your client, so basically the methods that you can use and also it's used for migrations which ultimately create the table and all the fields with specific types and constraints and stuffs like that. 
+You're gonna setup your model within your `schema.prisma` file. so, you have schema with models in it.
+
+Go to `schema.prisma` file and create the product model
+
+  model Product {
+    id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+    name        String
+    slug        String   @unique(map: "product_slug_idx")
+    category    String
+    images      String[]
+    brand       String
+    description String
+    stock       Int
+    price       Decimal  @default(0) @db.Decimal(12, 2)
+    rating      Decimal  @default(0) @db.Decimal(3, 2)
+    numReviews  Int      @default(0)
+    isFeatured  Boolean  @default(false)
+    banner      String?
+    createdAt   DateTime @default(now()) @db.Timestamp(6)
+  }
+
+// @id will make it a `primary` key
+// @db allows us to kind of customize the type a little more
+// images is gonna be an array of strings, that's why we write `String[]`
+// String? : means optional
+// for slug we gonna keep it unique but we're also going to add an index by using map and we can name that index, here we name it "product_slug_idx", which just makes it a little more convenient.
+
+so, that's gonna be our model.
+now there's a couple of thing we need to do, 
+  1. After you create you model or you change or do anything in here, you want to generate you client because that's what is going to create the different methods and stuff to work with this model.
+
+  And before we run the command locally, we're going to add a script("postinstall": "prisma generate") within script block in `package.json`, because we need to do that on our server when we deploy. 
+
+"scripts": {
+  ...
+  "postinstall": "prisma generate" 
+} 
+
+"postinstall" means it's gonna run after we push to our server and we're gonna run prisma
+
+Now, run locally -> `npx prisma generate` (you might have to stop your server before running this script)
+Now next thing to do is we want to have a migration and add it to the database. It's gonna add a table called product with all these fields(we defined in our model), so we do that by saying 'npx prisma migrate dev --name init', we're gonna name it `init` because we are initializing our database. This is the first migration, This will create the migration file but it also runs it, so we should have the table in our database, and we will see how we check that with a tool called `Prisma studio`
+
+After the execution of the command, if you look in prisma now, you'll see a migration folder and the Timestamp_init folder  and inside it `migration.sql` with the sql that runs
+
+To check the actual db, you could use something like `pgAdmin`, but we have a great tool that we can use just by running command `npx prisma studio`, and that's gonna run on localhost:5555
+
+###Seeding sample data
+To get stuff in our db, we're just gonna create a simple seeder which is just a script that will add a products to the db and what we're gonna add is everything that's in this sample data file. So, we're gonna use this(sample-data.ts) to populate our db, And then instead of fetching these products directly from the file, we'll then fetch them from the db. And then we can move on to add our functionality to create products and update, edit and all that purchase products and so on. 
+
+// initialize or instantiate the Prisma object
+  npm install @prisma/adapter-pg
+
+prisma.ts (inside lib folder)
+  import "dotenv/config";
+  import { PrismaPg } from "@prisma/adapter-pg";
+  import { PrismaClient } from "@/db/generated/prisma/client";
+
+  const connectionString = `${process.env.DATABASE_URL}`;
+
+  const adapter = new PrismaPg({ connectionString });
+  const prisma = new PrismaClient({ adapter });
+
+  export { prisma };
+
+create `seed.ts` within db folder with given code. refer seed.ts file
+
+#################################### Load products from db #########################################
+Now we wanna fetch our data from db now that we seeded some sample data. Now we're just pulling the products from the file(seed.ts)
+To do this, we're gonna be using `server actions` and server actions are essentially just asynchronous functions that are executed on the server. And to create a server action we just need to add 'use server' directive at the top and then we create our asynchronous function
+Now, in this actions you can actually submit a form too, just like you would with like php, where you would submit it to a file.
+Obviously for fetching data, we're not submitting any forms, so you can just put in an event, put it in a function that is called on some event or just stick it in the component, set latest products equal to getLatestProduct action or whatever it might be.
+So, it's really simple and in my opinion it's much better than using API routes
+But API routes still have their place ofcourse if you have maybe a react frontend , a mobile app, and use the same API, that's where API routes are really useful. But something like this, just a single monolithic application, then in my opinion you should use server actions. 
+create a folder called `actions` within `lib` folder, and basically what we wanna do is have for each resource like products, users or orders. It'll have a file dedicated to those actions. Now, create a file called `product.actions.ts`
+
+product.actions.ts
+  'use server';
+  import { prisma } from '@/lib/prisma';
+
+  // now we're gonna create a funtion that fetches our products or our latest products and what that returns initially is a Prisma object. And we're gonna have to convert that to just a plain JS object, so we'll be writing just a very simple utility function to wrap around the value to convert it to just a regular JS function
+
+  // Get latest products
+  export async function getLatestProducts() {
+    const data = await prisma.product.findMany({
+      take: 4,
+      orderBy: { createdAt: 'desc' },
+    });
+
+    return data;
+  }
+  // `take`: specifies how many we want to fetch, now even though our `product-list.tsx` component, we made it so it has a limit and we set it to 4 anyway, so it's only going to show four even if we get more than that. But why take more than we're gonna show
+  // `orderBy`: fetch data in descending order of their createdAt field
+
+  // the returned data is a Prima object  
+  // to bring this in and use it, we wanna do that in our 'homepage', in app -> (root) -> page.tsx
+
+page.tsx(homepage)
+  import ProductList from '@/components/shared/product/product-list';
+  import { getLatestProducts } from '@/lib/actions/product.actions';
+
+  const HomePage = async () => {
+    const latestProducts = await getLatestProducts();
+
+    return (
+      <>
+        <ProductList
+          data={latestProducts}
+          title="Newest Arrivals"
+          limit={4}
+        />
+      </>
+    );
+  };
+
+  export default HomePage;
+
+Now we're fetching it from the DB 
+but we do have an warning (`Server` Decimal objects cannot be rendered as text children. Try formatting it using toString()) because like we said, we're returning a prisma object, so what we're gonna do is create a simple utility function that converts this Prisma object to plain JS object.
+
+
+In util.ts
+  // Convert prisma object into a regular JS object
+  export function convertToPlainObject<T>(value: T): T {
+    return JSON.parse(JSON.stringify(value));
+  }
+
+  // <T>: this is called the TS generic and this T, it's basically a placeholder for any type that the function might accept when it's called, so it could be a string, an object, a Prisma model, and this value T is just specifying the type of the argument that passed in and TS infers the type at the time of the function call
+  // :T : this is for the return of the function, the return type, it specifies that it should be the same type as the input
+  // so, if you called a function with a product object then TS knows that the return value will also be the type of product
+
+Now we're just gonna bring that into the action and just wrap the return value with this utility function
+product.actions.ts
+  export async function getLatestProducts() {
+    const data = await prisma.product.findMany({
+      take: 4,
+      orderBy: { createdAt: 'desc' },
+    });
+
+    return convertToPlainObject(data);
+  }
+
+Now we shouldn't see that warning in the console because we're just getting a regular JS object, It's not a prisma object where we're getting errors about decimals.
+
+###############################################################################################
+
+##################### Zod validation and type inference #######################################
+We've been using .ts and .tsx file, we're using TS but we haven't utilized it to it's full potential.
+for example, uptil now in our components -> shared -> `product-card.tsx` component we use the `any` type for product, which we shouldn't do, we should have a product type like 
+    const ProductCard = ({ product }: {product: Product}) => {...}
+So we're gonna create types, but we're also going to use a library called `Zod`.
+so, Zod is a TS-first schema validation with static type inference. so not only does it cover types, it also offers runtime validation
+If you just use TS on its own and you create your types or interfaces, that's great for development.
+It offers compile time checking of your types, but it doesn't offer runtime validation for data from like APIs or forms. So, what this does is it allows us to create validation schemas so that we don't have to manually put validation like in our component or action that says like the name should have atleast three characters. Like we don't wanna clutter our code up with that, so we can just isolate it all inside of one file, inside of what's called a `Zod schema`.
+And we can have schema for inserting products, for fetching products, deleting products or users or orders or whatever the resource might be
+
+Let's start off by creating our types file. So, basically what we're gonna have is a validator file for our Zod schema. But ofcourse we wanna have our types file for our actual TS types
+create `types`(folder in root) -> index.ts(this is where all our types will go)
+  index.ts
+    export type Product = {
+      id: string;
+      name: string;
+    };
+Now we're not gonna add everything here because again we're using Zod and we can actually infer from our Zod schemas and that's what we're gonna do.
+
+npm i zod
+
+now we're gonna have a `validators.ts` file, we're going to put the in `lib` folder
+  validators.ts
+
+    import { z } from 'zod';
+
+    // first schema that we wanna create is gonna be for inserting products, because again just the product on its own has fields like id, createdAt and rating, but those aren't fields we'd use in an insert, you're not gonna insert the rating when you add a product, you're not gonna insert the createdAt because that's created automatically in the DB
+
+    // you might have different schema for updating the products
+
+    // Schema for inserting products
+    export const insertProductSchema = z.object({
+      name: z.string().min(3, 'Name must be atleat 3 characters'),
+      slug: z.string().min(3, 'Slug must be atleat 3 characters'),
+      category: z.string().min(3, 'Category must be atleat 3 characters'),
+      brand: z.string().min(3, 'Brand must be atleat 3 characters'),
+      description: z.string().min(3, 'Description must be atleat 3 characters'),
+      stock: z.coerce.number(),
+      images: z.array(z.string()).min(1, 'Product must have atleat one image'),
+      isFeatured: z.boolean(),
+      banner: z.string().nullable(),
+    })
+    // this is very convenient because we're not gonna have to add this validation ourselves later on within actions or whatever we're submitting forms
+    // we wanted `stock` to be a number but it's gonna come in as a string, most likely from a form. what we do is we'll write `z.coerce.number()`, so it'll coerce it to a number.
+    // banner: z.string().nullable(), banner is gonna be a string but its going to be optional so we're gonna add on to that with `nullable()`
+    // there's one more field I wanna add which is the price, but price need to formatted with precision because it needs to have two decimal points, something like 49.99, we don't want 49.9 or 49.99999. So, it's really important to format it correctly because it deals with taxes and totals and all that stuff so you really to make sure your price is formatted correctly.
+
+
+  types -> (index.ts)
+    import { z } from 'zod';
+    import { insertProductSchema } from '@/lib/validators';
+
+    export type Product = z.infer<typeof insertProductSchema> & {
+      id: string;
+      rating: string;
+      createdAt: Date;
+    };
+
+    // we can use `z.infer` to basically bring in all the fields from (validators.ts) into our type. That way we're not repeating ourselves. Get rid of everything except id, rating and createdAt. keep id because that's not in the schema
+
+    // so, now what its going to do is it's going to include all of the fields from schema in validators.ts, so we don't have to add them manually
+
+The only other thing is the price for which we're gonna create a utility funtion to help us out with that
+  lib -> (utils.ts) 
+    // Format number with decimal places
+    export function formatNumberWithDecimal(num: number): string {
+      const [int, decimal] = num.toString().split('.');
+      return decimal ? `${int}.${decimal.padEnd(2, '0')}` : `${int}.00`;
+    }
+
+    add the above utility function
+
+Now add price field in the validator schema
+  price: z.string()
+  but we wanna refine it to match a regular expression that matches that format (eg 49.90 and not 49.9 or 49.9999), 
+  price: z.string().refine(())
+
+#######################################################################################
+तुम्हारे project में तुम Prisma ORM का use करके PostgreSQL database से `Product` data fetch कर रहे हो। जब Prisma database से data लाता है, तब वह normal JavaScript object जैसा दिखाई देता है, लेकिन internally कुछ fields special Prisma objects होती हैं। तुम्हारे `Product` schema में `price` और `rating` fields `Decimal` type की हैं, इसलिए Prisma इन्हें normal JavaScript `number` के रूप में नहीं बल्कि `Prisma.Decimal` object के रूप में return करता है। Prisma ऐसा इसलिए करता है क्योंकि JavaScript decimal calculations में precision errors आ सकते हैं, जैसे `0.1 + 0.2 = 0.30000000000000004`। Financial values और ratings जैसी decimal values को accurately handle करने के लिए Prisma special Decimal object use करता है ताकि exact precision बनी रहे।
+
+Backend के अंदर यह Decimal object ठीक से काम करता है और Prisma इसके methods भी देता है, लेकिन problem तब आती है जब data को frontend, API response, Next.js Server Components, Client Components, server actions, या `JSON.stringify()` के through भेजना होता है। Next.js और JSON serialization केवल plain serializable values समझते हैं जैसे string, number, boolean, array और plain object। लेकिन Prisma Decimal एक custom class/object होता है, इसलिए कभी-कभी serialization errors, hydration issues या weird object structures दिखाई दे सकते हैं। इसी problem को avoid करने के लिए `convertToPlainObject()` function बनाया जाता है।
+
+```ts id="7t1xk5"
+export function convertToPlainObject<T>(value: T): T {
+  return JSON.parse(JSON.stringify(value));
+}
+```
+
+इस function में पहले `JSON.stringify(value)` Prisma result को JSON string में convert करता है। इस step में Prisma के special internal objects simple serializable values में बदल जाते हैं। उसके बाद `JSON.parse()` उस JSON string को वापस plain JavaScript object में convert कर देता है। इसका मतलब final output में Prisma internals नहीं रहते और object safely frontend या Next.js components में भेजा जा सकता है। उदाहरण के लिए `Decimal("999.99")` convert होकर `"999.99"` बन जाता है जो plain serializable value है।
+
+इस function में `<T>` TypeScript generic है। इसका मतलब function किसी भी type का data accept कर सकता है और वही type return करेगा। अगर input `Product[]` है तो output भी `Product[]` माना जाएगा। इससे TypeScript type safety बनी रहती है और autocomplete भी सही काम करता है।
+
+तुम्हारे specific case में conversion mainly इसलिए जरूरी है क्योंकि schema में `price Decimal` और `rating Decimal` fields मौजूद हैं। बाकी fields जैसे `String`, `Int`, `Boolean`, `String[]` आदि पहले से plain JavaScript compatible हैं और उन्हें convert करने की जरूरत नहीं होती। `createdAt` field `DateTime` है जो JavaScript `Date` object के रूप में आता है और अधिकतर cases में Next.js इसे automatically serialize कर देता है, इसलिए उसके लिए usually extra handling की जरूरत नहीं पड़ती।
+
+Practical rule यह है कि अगर Prisma data केवल backend logic में use हो रहा है तो conversion optional है। लेकिन अगर वही data frontend, React components, API response, server action return value, cache, localStorage या network response में जा रहा है, तो उसे plain serializable object में convert करना recommended और safer approach है। इसलिए तुम्हारे Next.js + Prisma project में `convertToPlainObject()` use करना एक common और practical pattern है।
+#######################################################################################
