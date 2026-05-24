@@ -20,3 +20,12 @@ export async function getLatestProducts() {
 
 // the returned data is a Prima object  
 // to bring this in and use it, we wanna do that in our 'homepage', in app -> (root) -> page.tsx
+
+
+// Get single product by it's slug
+export async function getProductBySlug(slug:string) {
+  return await prisma.product.findFirst({
+    where: {slug: slug},
+  });
+}
+// here we're getting the first product where the slug is equal to the slug that's passed in 

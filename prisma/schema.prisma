@@ -5,11 +5,13 @@
 
 generator client {
   provider = "prisma-client"
-  output   = "../db/generated/prisma"
+  // output   = "../db/generated/prisma"
+  output   = "./generated/prisma"
 }
 
 datasource db {
-  provider = "postgresql"
+  provider  = "postgresql"
+  // v7 me url yahan NAHI dete — prisma.config.ts me dete hain
 }
 
 model Product {
@@ -34,4 +36,3 @@ model Product {
 // images is gonna be an array of strings, that's why we write `String[]`
 // String? : means optional
 // for slug we gonna keep it unique but we're also going to add an index by using map and we can name that index, here we name it "product_slug_idx", which just makes it a little more convenient.
-

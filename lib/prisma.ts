@@ -1,11 +1,40 @@
-// initialize or instantiate the Prisma object
-import "dotenv/config";
-import { PrismaPg } from "@prisma/adapter-pg";
-import { PrismaClient } from "@/db/generated/prisma/client";
+import { PrismaClient } from '@/prisma/generated/prisma/client'
+import { PrismaNeon } from '@prisma/adapter-neon'
 
-const connectionString = `${process.env.DATABASE_URL}`;
+const globalForPrisma = globalThis as unknown as {
+  prisma: ReturnType<typeof createPrismaClient> | undefined
+}
 
-const adapter = new PrismaPg({ connectionString });
-const prisma = new PrismaClient({ adapter });
+function createPrismaClient() {
+  const connectionString = process.env.DATABASE_URL
+  if (!connectionString) {
+    throw new Error('DATABASE_URL environment variable is not set')
+  }
 
-export { prisma };
+  const adapter = new PrismaNeon({ connectionString })
+
+  return new PrismaClient({ adapter }).$extends({
+    result: {
+      product: {
+        price: {
+          needs: { price: true },
+          compute(product) {
+            return product.price.toString()
+          },
+        },
+        rating: {
+          needs: { rating: true },
+          compute(product) {
+            return product.rating.toString()
+          },
+        },
+      },
+    },
+  })
+}
+
+export const prisma = globalForPrisma.prisma ?? createPrismaClient()
+
+if (process.env.NODE_ENV !== 'production') {
+  globalForPrisma.prisma = prisma
+}
