@@ -407,3 +407,56 @@ export function convertToPlainObject<T>(value: T): T {
 
 Practical rule यह है कि अगर Prisma data केवल backend logic में use हो रहा है तो conversion optional है। लेकिन अगर वही data frontend, React components, API response, server action return value, cache, localStorage या network response में जा रहा है, तो उसे plain serializable object में convert करना recommended और safer approach है। इसलिए तुम्हारे Next.js + Prisma project में `convertToPlainObject()` use करना एक common और practical pattern है।
 #######################################################################################
+
+#######################################################################################
+/*
+  const ProductDetailsPage = async (props: {
+    params: Promise<{slug: string}>
+  }) => { ...}
+
+  props ek object hai jisme params property hai, aur params ek promise hai jo eventually resolve hoke { slug: string } return karega.
+
+  Promise<T>, yaha T generic hai
+    Yaha T matlab: future me kya return hoga
+    So:
+      Promise<string>
+      Promise<number>
+      Promise<boolean>
+      Promise<User>
+    sab valid hai.
+*/
+
+// `notFound` Next.js App Router ka built-in function hai jo 404 page render karne ke liye use hota hai. Isko "next/navigation" se import kiya jata hai. Jab kisi page ka required data exist nahi karta — jaise database me requested product, user, ya blog post na mile — tab `notFound()` call kiya jata hai. Ye internally ek special Next.js error throw karta hai jise framework catch karke default 404 page ya custom not-found.tsx component render karta hai. Example: if (!product) notFound(); ka matlab hai agar product null ya undefined hai to normal UI render mat karo, directly “Page Not Found” dikhao. Ye mostly dynamic routes ([slug], [id]) me use hota hai.
+
+// npx shadcn@latest add badge
+// that's gonna be for the stock option
+
+####################################
+
+############# dynamic class using {cn} module #####################################
+import { cn } from '@/lib/utils';
+
+className={cn( 'border mr-2 cursor-pointer hover:border-orange-600', current === index && 'border-orange-500',)}
+#####################################################################
+
+------------------Auth using nextauth ---------------------------------------
+now we're gonna get into authentication which we're using nextauth for. nextauth is suggested for most next.js application in most situation because it's just offers so many different ways to log-in, so many different providers, whether its Google, Github, Twitter or what we're gonna do is just using a local JWT strategy. So we'll just have users register with email and a password, and then they'll be able to log in with that email and password. We'll be using Bcrypt to hash passwords.
+- We're gonna start of by creating our models, we're gonna have a user model, an account model, a session model. 
+- Then we're gonna seed some user data. So, right now we have a product seeder but we're gonna add users to that. 
+- We're gonna setup nextauth and there's some work that goes into that. We need to create a config file and there's some callback and stuff we need to setup. 
+- Then we're gonna create our action for signing in and signing out
+- Then we'll have the pages and buttons for those actions, so, a sign in page and a sign out button.
+- Then we have our zod schema and validation because we have obviously if a user let's say tries to use an email that's already used or something like that, we wanna have our validation. We're gonna setup a toast, which is a notification to tell the user that they did something wrong
+- Then we'll have our sign up page and form.
+- We're gonna handle our errors, and we're gonna add the JWT callback to nextauth.
+
+AUTHENTICATION FLOW
+- We start off by getting the user credentials so they login through a form
+- We check those credentials against the DB using Prisma
+- If its correct then we create a JWT for the user and the id and role is gonna be encoded in that JWT. 
+- Then that JWT is sent to the server with every request that's made, 
+- And that JWT is used to create a session with the user details and that session allows the app to identify the user without logging re-logging in, so the user can have stuff in there shopping cart, and they can actually close the browser and comeback later and that stuff will be there, And if they wanna see their user profile, they can do that as well
+- And then the JWT will set it to expire after 30 days. So after 30 days they'll have to relog in. 
+
+---------------Authjs--------------------
+basically nextauth was originally created just for next.js but it's broadened to other frameworks. so that's where this authjs comes in, so, a lot of the documentation that we're going to use is from authjs.dev

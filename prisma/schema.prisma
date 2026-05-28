@@ -5,12 +5,11 @@
 
 generator client {
   provider = "prisma-client"
-  // output   = "../db/generated/prisma"
   output   = "./generated/prisma"
 }
 
 datasource db {
-  provider  = "postgresql"
+  provider = "postgresql"
   // v7 me url yahan NAHI dete — prisma.config.ts me dete hain
 }
 
@@ -34,5 +33,74 @@ model Product {
 // @id will make it a primary key
 // @db allows us to kind of customize the type a little more
 // images is gonna be an array of strings, that's why we write `String[]`
-// String? : means optional
+// ? : means optional
 // for slug we gonna keep it unique but we're also going to add an index by using map and we can name that index, here we name it "product_slug_idx", which just makes it a little more convenient.
+
+model User {
+  id            String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name          String    @default("NO_NAME")
+  email         String    @unique(map: "user_email_idx")
+  emailVerified DateTime? @db.Timestamp(6)
+  image         String?
+  password      String?
+  role          String    @default("user")
+  address       Json?     @db.Json
+  paymentMethod String?
+  createdAt     DateTime  @default(now()) @db.Timestamp(6)
+  updatedAt     DateTime  @updatedAt
+  accounts      Account[]
+  session       Session[]
+}
+
+model Account {
+  userId            String  @db.Uuid
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+
+  createdAt DateTime @default(now()) @db.Timestamp(6)
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([provider, providerAccountId])
+}
+
+// We're gonna have a relationship between the `account` model and the `user` model and there's a couple things you need to do to make that happen. So, we need to have a foreign key that maps to the user model(which will be a user table) and that's gonna be `userId`
+// @@id assigns a primary key just like @id does but this is a composite key which means that we're taking two fields, in this case the provider and providerAccountId, combining them and making that the primary key. The provider will be let's say Google and then the providerAccountId would be that GoogleId. So, combining this together is gonna give you a unique ID and we're making that our primary key rather than creating a whole new field for the id which would be a little redundant.
+
+model Session {
+  sessionToken String   @id
+  userId       String   @db.Uuid
+  expires      DateTime @db.Timestamp(6)
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now()) @db.Timestamp(6)
+  updatedAt DateTime @updatedAt
+}
+
+// @id makes a field a primary key which is unique ofcourse
+// for userId, we're gonna have a relation with the user table
+// you have a user field, map that to the user model and use the userId from Account model but reference the id in the User model
+// we have a userfield, map 
+
+model VerificationToken {
+  identifier String
+  token      String
+  expires    DateTime
+
+  @@id([identifier, token])
+}
+
+// since we edited the file, we have to generate our prisma client with these new models. And we also need to create the migeration so that it creates the tables.
+// so two commands we have to run, npx prisma generate, npx prisma migrate dev --name add_user_based_tables , you should always name something that describes what you are doing
+// now this actually add tables for all models we just added. 
+
+// npx prisma studio
