@@ -1,4 +1,22 @@
+import { hashSync } from 'bcrypt-ts-edge';
+
 const sampleData = {
+  users: [
+    {
+      name: 'John',
+      email: 'john.admin@example.com',
+      password: hashSync('123456', 10),
+      role: 'admin',
+    },
+    {
+      name: 'Jane',
+      email: 'jane.user@example.com',
+      password: hashSync('123456', 10),
+      role: 'user',
+    },
+    // password has to be hashed even though this is just a demo user or whatever, we're gonna hash the password and we're gonna be using the bcrypt library, however we're using the typescript and we're also using serverless environment so there's a package which is basically bcrypt, its the same thing, its the Bcrypt library with some additions to it to support typescript and to support edge(which allows us to run it in serverless environment), So, it's called `bcrypt-ts-edge`, so that's what we're gonna use, `npm i bcrypt-ts-edge`. The method(functions) and everything is gonna be all the same as regular `bcryptjs`
+    // A salt is a random value added to the password before hashing it to make it more secure. And that makes it so that even though two users have the same password, their hashed outputs are different. And then the rounds is the computational complexity of the hashing process, so the more salt the more secure, also the more computing power it takes. so 10 is usually the recommended
+  ],
   products: [
     {
       name: 'Polo Sporting Stretch Shirt',
