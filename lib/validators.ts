@@ -36,3 +36,11 @@ export const insertProductSchema = z.object({
 // When it comes to add a product to our application, we'll be using this schema with these validations.
 
 // now our insertProductSchema is all set for when we want to use that. Whenever we create that functionality and we need this validation.
+// Given any Zod schema, use `.parse` to validate an input. If it's valid, Zod returns a strongly-typed deep clone of the input.
+
+// Schema for signing users in
+export const signInFormSchema = z.object({
+  // email: z.string().email('Invalid email address'),
+  email: z.email('Invalid email address'),
+  password: z.string().min(6, 'Password must be atleast 6 characters'),
+});

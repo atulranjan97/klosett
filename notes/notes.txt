@@ -388,7 +388,7 @@ Now add price field in the validator schema
   but we wanna refine it to match a regular expression that matches that format (eg 49.90 and not 49.9 or 49.9999), 
   price: z.string().refine(())
 
-#######################################################################################
+---------------------------------------------------------------------------------------
 तुम्हारे project में तुम Prisma ORM का use करके PostgreSQL database से `Product` data fetch कर रहे हो। जब Prisma database से data लाता है, तब वह normal JavaScript object जैसा दिखाई देता है, लेकिन internally कुछ fields special Prisma objects होती हैं। तुम्हारे `Product` schema में `price` और `rating` fields `Decimal` type की हैं, इसलिए Prisma इन्हें normal JavaScript `number` के रूप में नहीं बल्कि `Prisma.Decimal` object के रूप में return करता है। Prisma ऐसा इसलिए करता है क्योंकि JavaScript decimal calculations में precision errors आ सकते हैं, जैसे `0.1 + 0.2 = 0.30000000000000004`। Financial values और ratings जैसी decimal values को accurately handle करने के लिए Prisma special Decimal object use करता है ताकि exact precision बनी रहे।
 
 Backend के अंदर यह Decimal object ठीक से काम करता है और Prisma इसके methods भी देता है, लेकिन problem तब आती है जब data को frontend, API response, Next.js Server Components, Client Components, server actions, या `JSON.stringify()` के through भेजना होता है। Next.js और JSON serialization केवल plain serializable values समझते हैं जैसे string, number, boolean, array और plain object। लेकिन Prisma Decimal एक custom class/object होता है, इसलिए कभी-कभी serialization errors, hydration issues या weird object structures दिखाई दे सकते हैं। इसी problem को avoid करने के लिए `convertToPlainObject()` function बनाया जाता है।
@@ -406,9 +406,9 @@ export function convertToPlainObject<T>(value: T): T {
 तुम्हारे specific case में conversion mainly इसलिए जरूरी है क्योंकि schema में `price Decimal` और `rating Decimal` fields मौजूद हैं। बाकी fields जैसे `String`, `Int`, `Boolean`, `String[]` आदि पहले से plain JavaScript compatible हैं और उन्हें convert करने की जरूरत नहीं होती। `createdAt` field `DateTime` है जो JavaScript `Date` object के रूप में आता है और अधिकतर cases में Next.js इसे automatically serialize कर देता है, इसलिए उसके लिए usually extra handling की जरूरत नहीं पड़ती।
 
 Practical rule यह है कि अगर Prisma data केवल backend logic में use हो रहा है तो conversion optional है। लेकिन अगर वही data frontend, React components, API response, server action return value, cache, localStorage या network response में जा रहा है, तो उसे plain serializable object में convert करना recommended और safer approach है। इसलिए तुम्हारे Next.js + Prisma project में `convertToPlainObject()` use करना एक common और practical pattern है।
-#######################################################################################
+--------------------------------------------------------------------------------------
 
-#######################################################################################
+--------------------------------------------------------------------------------------
 /*
   const ProductDetailsPage = async (props: {
     params: Promise<{slug: string}>
@@ -431,13 +431,13 @@ Practical rule यह है कि अगर Prisma data केवल backend l
 // npx shadcn@latest add badge
 // that's gonna be for the stock option
 
-####################################
+------------------------------------
 
-############# dynamic class using {cn} module #####################################
+------------- dynamic class using {cn} module -------------------------------------
 import { cn } from '@/lib/utils';
 
 className={cn( 'border mr-2 cursor-pointer hover:border-orange-600', current === index && 'border-orange-500',)}
-#####################################################################
+---------------------------------------------------------------------
 
 ------------------Auth using nextauth ---------------------------------------
 now we're gonna get into authentication which we're using nextauth for. nextauth is suggested for most next.js application in most situation because it's just offers so many different ways to log-in, so many different providers, whether its Google, Github, Twitter or what we're gonna do is just using a local JWT strategy. So we'll just have users register with email and a password, and then they'll be able to log in with that email and password. We'll be using Bcrypt to hash passwords.
@@ -451,7 +451,7 @@ now we're gonna get into authentication which we're using nextauth for. nextauth
 - We're gonna handle our errors, and we're gonna add the JWT callback to nextauth.
 
 AUTHENTICATION FLOW
-- We start off by getting the user credentials so they login through a form
+- We start off by getting the user credentials since they login through a form
 - We check those credentials against the DB using Prisma
 - If its correct then we create a JWT for the user and the id and role is gonna be encoded in that JWT. 
 - Then that JWT is sent to the server with every request that's made, 
@@ -460,3 +460,78 @@ AUTHENTICATION FLOW
 
 ---------------Authjs--------------------
 basically nextauth was originally created just for next.js but it's broadened to other frameworks. so that's where this authjs comes in, so, a lot of the documentation that we're going to use is from authjs.dev
+
+- npm install next-auth@beta
+- npm i @auth/prisma-adapter
+- next thing we're gonna do is generate a secret coz we need that to sign out JWTs, because we're gonna be using a combination of sessions and JSON web tokens
+- If you go to `https://next-auth.js.org/configuration/options`, there you will get:
+  NEXTAUTH_URL=http://localhost:3000
+  NEXTAUTH_URL_INTERNAL=http://localhost:3000
+  NEXTAUTH_SECRET="" (openssl rand -base64 32 (run this command in CLI to generate the secret))
+
+- Next thing is to create our config options file, we gonna put this in a file named `auth.ts`(create it in the root)
+
+- when we use nextauth it sets up a bunch of hidden api routes for us to handle things like signing in, signing out, managing sessions. And these routes are automatically created when you configure next auth, and they're used behind the scenes to handle authentication. Now we just have to create a single endpoint to basically hook those routes up. And when we do this we're basically saying that any route that is /api/auth/* then basically nextauth just kinda takes over and does it's thing. so its very opinionated.
+We just set up all the configuration which we did in the last lesson and then nextauth does everything behind the scenes. And what's great is you can add as many providers as you want and they'll just work.
+- create a file, app -> api(create this folder) -> auth(create this folder) -> [...nextauth] (create this folder) -> route.ts
+
+---------signing in & signing out-----------------------
+Now we're gonna work on the sing in and sign out
+we need to have an action for both where we interact with the database. We get the user from the database. We run it through the sign in function that nextauth offers, we return the user and so on
+Then we need to create a page with a form to sign in. so there's a few steps to do this, 
+Then we need to obviously hook up the form to that action.
+We need validation and that's where Zod comes in
+So, we're gonna start off by creating a very simple Zod schema for the sign in form. 
+
+lib->validators.ts 
+  Add the following code
+  // Schema for signing users in
+  export const signInFormSchema = z.object({
+    email: z.string().email('Invalid email address'),
+    password: z.string().min(6, 'Password must be atleast 6 characters'),
+  });
+
+  so that's our signin form schema and that's what we used for validation. So, when we have our action that our form is submitted to, we don't have to say like if it's not an email or if it doesn't have six characters, all that stuff is done here and we simply use the parse method to validate
+
+Now the next step that we want to do is the actual actions, so both the sign in and sign out actions. 
+lib -> actions -> user.actions.ts (create)
+  // so any actions that has to do with user or authentication are gonna go in `user.actions.ts`
+
+
+-----------------------credentials signin form-----------------
+npx shadcn @latest add label input
+we use this two component that is `label` and `input` from shadcn to create our form
+
+- we're gonna set default values for form in constant
+- Now if you want to put your test email and test password, you don't have to fill the form everytime, you can do that. But just remember you don't want that in production where a user goes to your form and the admin email and password is in there. So just be aware of that.
+- For some of the other forms we'll probably have some default values so we don't have to keep entering them.
+
+-------------------hook up sign in form--------------------------
+now we're gonna hook up our signIn form to the `signInWithCredentials` action. And we're gonna be using some new react hooks called `useActionState` and `useFormStatus`
+- `useActionState`: That's gonna allow us to easily submit to our signInWithCredentials action and get the response back and do what we want with that response or state
+- `useFormStatus` is just to make it a little nicer where we can get some user feedback, like if it's pending, if we sign in and the form's pending, we can show on the button, we can disable it and it can say signing in. Or you could have a spinner or something like that. It's not need but its nice to have, it adds to the whole user experience.
+
+
+-----------------------getting session in server vs client component ------------------------------------
+// to get session in server component
+  import { auth } from '@/auth';
+  const session = await auth();
+
+// to get session in client component
+  - import { useSession } from 'next-auth/react';
+  - const {data: session} = useSession();
+
+----------------------------------------
+now one way you can tell if you're logged in is if you open up devtools -> application -> cookies and there you shoud see your `authjs.session-token`
+
+we have authentication, now we also want to have the callback implemented where lets say we're on the cart page and we're not logged in, but we get to a point where we need to login, so we wanna make it so that once we go through the form and sign in, it takes us back to that URL and we can do that by adding a callback URL to the search params in the URL
+
+---------------Callback URL redirect -------------------------------
+Alright, now we have a sign in page and form ready, now we wanna implement the callback url redirect. so basically if a request is made to the route `/sign-in?callbackUrl=http://localhost:3000/shipping-address`,basically if we sign in we want to be redirected to that page. so we have to edit the sign-in -> page.tsx & credential-signin-form.tsx because in the form we need to persist that callback url, so, we're just gonna send it(callback url) as a hidden input in the form.
+
+In client component, the way we get search params is different than server components. We don't get search params in client component as props. What we do is we use hook called `useSearchParams`
+  
+  import {useSearchParams} from 'next/navigation';
+
+  const searchParams = useSearchParams();
+  const callbackUrl = searchParams.get('callbackUrl') || '/';

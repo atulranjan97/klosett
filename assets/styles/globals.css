@@ -32,6 +32,10 @@
   @apply font-bold text-xl lg:text-2xl;
 }
 
+@utility link {
+  @apply text-yellow-600 hover:underline font-medium;
+}
+
 @theme {
   --color-background: hsl(var(--background));
   --color-foreground: hsl(var(--foreground));

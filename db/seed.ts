@@ -1,4 +1,3 @@
-import 'dotenv/config';
 import { prisma } from '@/lib/prisma';
 import sampleData from './sample-data';
 
@@ -29,4 +28,3 @@ main();
 // Next.js loads .env automatically when running the app, but plain Node/tsx scripts do not — so seed scripts usually need dotenv manually.
 
 // Now anytime you can just wipe the database and have two users, so you can login as those users when we add that functionality and ofcourse we have our products
-// this line added in test-branch
