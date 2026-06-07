@@ -4,6 +4,8 @@ import { prisma } from '@/lib/prisma';
 import CredentialsProvider from 'next-auth/providers/credentials';
 import { compareSync } from 'bcrypt-ts-edge';
 import type { NextAuthConfig } from 'next-auth';
+import GoogleProvider from 'next-auth/providers/google';
+import { Param } from '@prisma/client/runtime/client';
 
 export const config = {
   pages: {
@@ -57,6 +59,17 @@ export const config = {
         return null;
       },
     }),
+    GoogleProvider({
+      clientId: process.env.GOOGLE_CLIENT_ID!,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
+      authorization: {
+        params: {
+          prompt: 'consent',
+          access_type: 'offline',
+          response_type: 'code',
+        },
+      },
+    }),
   ],
   callbacks: {
     // this session callback runs when a session is accessed, here we have access to the session itself, the token, the user etc.
@@ -77,7 +90,7 @@ export const config = {
 
       return session;
     },
-    async jwt({ token, user, trigger, session }: any) {
+    async jwt({ token, user, account, trigger, session }: any) {
       // Assign user fields to token
       if (user) {
         token.role = user.role;
@@ -94,8 +107,21 @@ export const config = {
         }
       }
 
+      // Handle Google login — fetch role from DB since Google doesn't provide it
+      if (account?.provider === 'google') {
+        const dbUser = await prisma.user.findFirst({
+          where: { email: token.email! },
+        });
+        if (dbUser) {
+          token.role = dbUser.role;
+          token.name = dbUser.name;
+        }
+      }
+
       return token;
     },
+    // Invoked on successfull sign in
+    // async signIn()
   },
 } satisfies NextAuthConfig;
 // satisfies statement ensures that the object structure, this config object is compatible with this type(NextAuthConfig), so, you can't have other things that basically aren't in this list(given in docs)

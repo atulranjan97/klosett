@@ -730,3 +730,140 @@ create new component: components -> shared -> header -> user-button.tsx
       unknown → pehle type check karo phir use karo — good practice
       Yahan any use kiya + eslint comment — acceptable tradeoff
     ============================================================
+
+------------------------------------------------------------------------------------------------------------
+    Chalo ek ek point detail mein samjhte hain:
+
+---
+
+## 1. PrismaAdapter automatically User + Account create karta hai
+
+Jab koi pehli baar Google se login karta hai, PrismaAdapter **automatically** ye karta hai:
+
+```
+Google se aata hai:
+{
+  name: "Atul Kumar",
+  email: "atul@gmail.com",
+  picture: "https://..."
+}
+```
+
+Prisma adapter ye **automatically** DB mein dalta hai:
+
+```sql
+-- User table mein
+INSERT INTO User (name, email) VALUES ('Atul Kumar', 'atul@gmail.com')
+
+-- Account table mein (Google account link karta hai)
+INSERT INTO Account (userId, provider, providerAccountId) 
+VALUES (userId, 'google', 'google-user-id-123')
+```
+
+**Tum kuch nahi likhte** — adapter khud karta hai. Isliye `signUpUser` jaisi koi function nahi banani Google ke liye.
+
+---
+
+## 2. JWT strategy mein Adapter sirf Google linking ke liye
+
+Do strategies hoti hain NextAuth mein:
+
+```
+Database Strategy:
+  Login → Session DB mein save hoti hai → Har request par DB check hota hai
+
+JWT Strategy (tumhari):
+  Login → Token browser cookie mein save hota hai → Har request par sirf token check hota hai, DB nahi
+```
+
+Toh adapter ka kaam sirf itna hai:
+
+```
+JWT Strategy mein Adapter:
+✅ Google user pehli baar aaya → User + Account DB mein banao
+✅ Dobara aaya → Account table se dhundo, user identify karo
+❌ Session DB mein save nahi karta (JWT kar raha hai ye kaam)
+```
+
+---
+
+## 3. Role Google se nahi aata, DB se lena padta hai
+
+Google sirf ye deta hai:
+```js
+profile = {
+  name: "Atul Kumar",
+  email: "atul@gmail.com",
+  picture: "https://...",
+  email_verified: true
+  // ❌ role nahi deta
+}
+```
+
+Isliye JWT callback mein manually DB se fetch karte hain:
+
+```ts
+async jwt({ token, user, account }) {
+  // Google login detect karo
+  if (account?.provider === 'google') {
+    const dbUser = await prisma.user.findFirst({
+      where: { email: token.email! }
+    });
+    // DB se role lo
+    token.role = dbUser?.role; // 'user' or 'admin'
+  }
+
+  // Credentials login mein role directly milta hai
+  if (user) {
+    token.role = user.role;
+  }
+
+  return token;
+}
+```
+
+Flow kuch aisa hai:
+```
+Google Login
+    ↓
+Adapter: User DB mein banao (role default 'user' hoga)
+    ↓
+JWT Callback: DB se role fetch karo
+    ↓
+Session Callback: Token se role session mein daalo
+    ↓
+Frontend: session.user.role available hai
+```
+
+---
+
+## 4. Production mein Redirect URI add karna
+
+Development mein tumhara URL hota hai:
+```
+http://localhost:3000/api/auth/callback/google
+```
+
+Production mein hoga:
+```
+https://yoursite.com/api/auth/callback/google
+```
+
+Google **sirf registered URIs** par redirect karta hai — security ke liye. Agar add nahi kiya toh:
+
+```
+Error: redirect_uri_mismatch
+Google aapki site ko nahi jaanta, block kar dega
+```
+
+Google Console mein jaake dono add karo:
+```
+✅ http://localhost:3000/api/auth/callback/google   (development)
+✅ https://yoursite.com/api/auth/callback/google    (production)
+```
+
+---
+
+**Summary ek line mein:**
+> Adapter = Google user DB mein banata hai | JWT = Session manage karta hai | Role = DB se manually lena padta hai | Redirect URI = Google ko batao ki kaun sa URL trusted hai ✅
+    ------------------------------------------------------------------------------------------------------------

@@ -10,9 +10,11 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { UserIcon } from 'lucide-react';
+import Image from 'next/image';
 
 const UserButton = async () => {
   const session = await auth();
+  // console.log(session);
 
   if (!session) {
     return (
@@ -36,9 +38,18 @@ const UserButton = async () => {
           <div className="flex items-center">
             <Button
               variant="ghost"
-              className="relative w-8 h-8 rounded-full ml-2 flex items-center justify-center bg-gray-200 dark:bg-gray-800 cursor-pointer"
+              className="relative w-8 h-8 p-0 rounded-full overflow-hidden ml-2 flex items-center justify-center bg-gray-200 dark:bg-gray-800 cursor-pointer"
             >
-              {firstInitial || <UserIcon />}
+              {session.user?.image ? (
+                <Image
+                  src={session.user.image}
+                  alt="google image"
+                  width={40}
+                  height={40}
+                />
+              ) : (
+                firstInitial || <UserIcon />
+              )}
             </Button>
           </div>
         </DropdownMenuTrigger>

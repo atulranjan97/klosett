@@ -93,3 +93,15 @@ export async function signUpUser(prevState: unknown, formData: FormData) {
   }
 }
 // where we create our signup form, we'll be using `useActionState` and {success:..., message:...} will be the state for this action's response
+
+// Sign in with Google// Sign in with Google
+export async function signInWithGoogle(formData: FormData) {
+  const callbackUrl = formData.get('callbackUrl') as string || '/';
+  await signIn('google', { redirectTo: callbackUrl });
+}
+// To add a signInWithGoogle action, it's actually much simpler than the credentials one since Google handles the auth flow:
+// That's it — no form parsing, no validation, no error handling needed. Google handles all of that.
+// The signIn('google', ...) call triggers a redirect to Google's OAuth page, so next-auth internally throws a redirect — which is why in your credentials action you had to catch isRedirectError. Here, you just let it redirect naturally since there's no try/catch wrapping it.
+
+// That `!` is TypeScript's Non-null Assertion Operator.
+// It tells TypeScript: "Trust me, this value will NOT be null or undefined at runtime."
