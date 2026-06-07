@@ -1,7 +1,10 @@
 'use server';
-import { signInFormSchema } from '../validators';
+import { signInFormSchema, signUpFormSchema } from '../validators';
 import { signIn, signOut } from '@/auth';
 import { isRedirectError } from 'next/dist/client/components/redirect-error';
+import { hashSync } from 'bcrypt-ts-edge';
+import { prisma } from '../prisma';
+import { formatError } from '../utils';
 
 // sign in the user with credentials
 // we're being specific with credentials meaning that it's using the credentialsProvider because you might have other actions that deal with Google, Github etc you might use for sign in.
@@ -39,3 +42,54 @@ export async function signOutUser() {
   await signOut();
 }
 // that will sign it out and will kill the cookie and the token and do everything that it needs to behind the scenes.
+
+// Sign up user
+export async function signUpUser(prevState: unknown, formData: FormData) {
+  try {
+    // validate the form data
+    const user = signUpFormSchema.parse({
+      name: formData.get('name'),
+      email: formData.get('email'),
+      password: formData.get('password'),
+      confirmPassword: formData.get('confirmPassword'),
+    });
+
+    const plainPassword = user.password;
+
+    user.password = hashSync(user.password, 10);
+
+    await prisma.user.create({
+      data: {
+        name: user.name,
+        email: user.email,
+        password: user.password,
+      },
+    });
+
+    await signIn('credentials', {
+      email: user.email,
+      password: plainPassword,
+    });
+
+    return { success: true, message: 'User registered successfully' };
+  } catch (error) {
+    // Zod errors
+    // console.log('Full error:', error);
+    // console.log('Keys:', Object.keys(error));
+    // console.log('error.issues:', error.issues);
+    // console.log('error.errors:', error.errors);
+
+    // Prisma errors
+    // console.log('Full error', error)
+    // console.log('error name:', error.name);
+    // console.log('error code:', error.code);
+    // console.log(JSON.stringify(error.meta, null, 2));
+
+    if (isRedirectError(error)) {
+      throw error;
+    }
+
+    return { success: false, message: formatError(error) };
+  }
+}
+// where we create our signup form, we'll be using `useActionState` and {success:..., message:...} will be the state for this action's response

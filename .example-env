@@ -1,0 +1,14 @@
+NEXT_PUBLIC_APP_NAME = "Klosett"
+NEXT_PUBLIC_APP_DESCRIPTION = "A modern ecommerce store built with Next.js"
+
+NEXT_PUBLIC_SERVER_URL = "http://localhost:3000"
+
+# Add your own DB URI
+DATABASE_URL=""
+DIRECT_URL=""
+
+LATEST_PRODUCTS_LIMIT = 4
+
+NEXTAUTH_URL=http://localhost:3000
+NEXTAUTH_URL_INTERNAL=http://localhost:3000
+NEXTAUTH_SECRET=""

@@ -44,3 +44,20 @@ export const signInFormSchema = z.object({
   email: z.email('Invalid email address'),
   password: z.string().min(6, 'Password must be atleast 6 characters'),
 });
+
+// Schema for signing up a user
+export const signUpFormSchema = z
+  .object({
+    name: z.string().min(3, 'Name must be atleast 3 characters'),
+    email: z.email('Invalid email address'),
+    password: z.string().min(6, 'Password must be atleast 6 characters'),
+    confirmPassword: z
+      .string()
+      .min(6, 'Confirm password must be atleast 6 characters'),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: "Passwords don't match",
+    path: ['confirmPassword'],
+  });
+
+  // so we want to add a validation where `password` matches `confirmPassword`, for this we add a refine method on the z object which takes in a function where we can pass in data(and this data contains all these field we defined, name, email etc) and what's going to come next from this function is true or false, if its true then the validation passes, if its false then it didn't. If the condition fails we show a message 'Password don't match' in the `confirmPassword` field

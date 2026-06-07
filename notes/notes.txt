@@ -535,3 +535,198 @@ In client component, the way we get search params is different than server compo
 
   const searchParams = useSearchParams();
   const callbackUrl = searchParams.get('callbackUrl') || '/';
+
+--------------------------------------------------
+anytime you create something in your .env, you're gonna want to add it to your production site
+
+--------------------------User Button and sign out ------------------------------
+create new component: components -> shared -> header -> user-button.tsx
+
+
+----------------------------------Sign up error handling---------------------------------------------------
+    ============================================================
+    FORMAT ERROR FUNCTION — DETAILED NOTES
+    ============================================================
+    Yeh function hamare poore app mein errors ko
+    user-friendly message mein convert karta hai.
+    Teen tarah ke errors handle karta hai:
+      1. Zod validation errors
+      2. Prisma database errors
+      3. Baaki sab errors
+    ============================================================
+
+
+    ── WHY `any` TYPE? ─────────────────────────────────────────
+
+    Normally TypeScript mein `any` use karna bad practice hai
+    kyunki yeh type safety tod deta hai — matlab TypeScript
+    koi bhi check nahi karta aur galtiyan runtime pe aati hain.
+
+    Lekin yahan `any` use kiya hai kyunki:
+
+      - `error` ka type predict nahi hota — kabhi ZodError,
+        kabhi PrismaClientKnownRequestError, kabhi kuch aur
+
+      - Proper types laana (z.ZodError | Prisma.PrismaClientKnownRequestError | Error)
+        bahut complex aur confusing ho jaata beginners ke liye
+
+      - Yeh un "rare occasions" mein se ek hai jahan `any`
+        practically sahi choice hai
+
+    ── WHY eslint-disable COMMENT? ─────────────────────────────
+
+    ESLint ek code quality tool hai jo tumhara code check karta hai.
+    Iska ek rule hai: `@typescript-eslint/no-explicit-any`
+    Yeh rule `any` likhne pe ERROR throw karta hai.
+
+    LOCAL (tumhara laptop): koi problem nahi, code chal jaata hai
+
+    VERCEL (production deploy): Vercel build ke time ESLint
+    strict mode mein run karta hai — `any` milne pe BUILD FAIL
+    ho jaati hai aur deploy nahi hota:
+      ❌ Error: Unexpected any. Specify a different type.
+      ❌ Failed to compile.
+
+    SOLUTION: Yeh comment ESLint ko bolta hai —
+    "agli line mein `any` hai, mujhe pata hai, ignore karo"
+    Sirf AGLI LINE pe apply hota hai, poori file pe nahi.
+
+    Agar poori file mein disable karna ho toh:
+      /* eslint-disable @typescript-eslint/no-explicit-any */
+    ─────────────────────────────────────────────────────────────
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    export async function formatError(error: any) {
+
+
+      ── CASE 1: ZOD VALIDATION ERROR ───────────────────────────
+      
+      Zod tab error throw karta hai jab form data schema se
+      match nahi karta — jaise email invalid ho, password
+      chota ho, name empty ho etc.
+      
+      IMPORTANT — Zod v3 vs v4 difference:
+        Zod v3 mein: error.errors  ✅ (array tha)
+        Zod v4 mein: error.errors  ❌ REMOVED — undefined aata hai
+        Zod v4 mein: error.issues  ✅ use karo yahi
+      
+      Agar error.errors.map() karo Zod v4 mein toh:
+        TypeError: Cannot read properties of undefined (reading 'map')
+      
+      WHY error.name check?
+        `error instanceof z.ZodError` better practice hai
+        lekin iske liye Zod import karna padta — simple rakha
+      
+      error.issues ka structure:
+        [
+          { path: ['email'], message: 'Invalid email address', code: 'invalid_format' },
+          { path: ['name'],  message: 'Name must be 3+ chars', code: 'too_small' }
+        ]
+      
+      .map((issue) => issue.message) — `issue` ka type alag se
+      likhne ki zaroorat NAHI hai kyunki TypeScript array ke
+      type se automatically infer kar leta hai. Sirf tab
+      likhte hain jab TypeScript khud na samajh sake.
+      
+      Output example: "Invalid email address. Name must be 3+ chars"
+      ─────────────────────────────────────────────────────────────
+      if (error.name === 'ZodError') {
+        const fieldErrors = error.issues.map((issue) => issue.message);
+        return fieldErrors.join('. ');
+
+
+      ── CASE 2: PRISMA UNIQUE CONSTRAINT ERROR ──────────────────
+      
+      Prisma tab P2002 error throw karta hai jab database mein
+      unique constraint violate ho — jaise same email se
+      dobara register karne ki koshish ho.
+      
+      IMPORTANT — Prisma v6 vs v7 difference:
+        Prisma v6 mein: error.meta.target = ['email']  ✅
+        Prisma v7 mein: error.meta.target = undefined  ❌ REMOVED
+      
+      Prisma v7 + Neon adapter mein actual structure:
+        error.meta = {
+          modelName: 'User',
+          driverAdapterError: {
+            cause: {
+              originalMessage: 'duplicate key value violates unique constraint "user_email_idx"',
+              constraint: {
+                fields: ['email']   ← yahan se nikalna padta
+              }
+            }
+          }
+        }
+      
+      Itna deeply nested kyun? Kyunki Prisma v7 ne internally
+      apna architecture change kiya aur meta.target officially
+      public API nahi tha — Prisma team ne khud acknowledge kiya.
+      
+      Agar multiple unique fields hon toh dynamic nikalo:
+        const fields = error.meta?.driverAdapterError?.cause?.constraint?.fields;
+        const field = fields?.[0] ?? 'Field';
+        return `${field} already exists.`;
+      
+      Lekin hamare User schema mein sirf email unique hai:
+        email String @unique(map: "user_email_idx")
+      Isliye hardcode kar diya — simpler aur cleaner.
+      
+      WHY sirf error.code check? instanceof kyun nahi?
+        Prisma v7 mein $extends() use karne ki wajah se
+        `error instanceof Prisma.PrismaClientKnownRequestError`
+        kabhi kabhi FALSE return karta hai — reliable nahi.
+        error.code === 'P2002' directly check karna safe hai.
+      ─────────────────────────────────────────────────────────────
+      } else if (
+        error.name === 'PrismaClientKnownRequestError' &&
+        error.code === 'P2002'
+      ) {
+        return 'Email already exists.';
+
+
+      ── CASE 3: BAAKI SAARE ERRORS ──────────────────────────────
+      
+      Jo errors Zod ya Prisma se nahi hain — network error,
+      unexpected crash, ya koi aur runtime error.
+      
+      error.message normally string hoti hai lekin kabhi kabhi
+      object bhi ho sakta hai — isliye type check kiya:
+      
+        typeof error.message === 'string'
+          → seedha return karo
+      
+        typeof error.message !== 'string' (object ya kuch aur)
+          → JSON.stringify() se string banao
+          → warna "[object Object]" print hoga jo useless hai
+      ─────────────────────────────────────────────────────────────
+      } else {
+        return typeof error.message === 'string'
+          ? error.message
+          : JSON.stringify(error.message);
+      }
+    }
+
+
+    ============================================================
+    QUICK REFERENCE — VERSION DIFFERENCES
+    ============================================================
+
+    ZOD:
+      v3 → error.errors   (array)   ✅
+      v4 → error.errors             ❌ removed
+      v4 → error.issues   (array)   ✅ use this
+
+    PRISMA:
+      v6 → error.meta.target[0]     ✅ (e.g. 'email')
+      v7 → error.meta.target        ❌ removed
+      v7 → error.meta.driverAdapterError.cause.constraint.fields[0]  ✅
+
+    ESLINT:
+      // eslint-disable-next-line rule-name  → sirf agli 1 line
+      /* eslint-disable rule-name */         → poori file
+
+    any vs unknown:
+      any     → type safety nahi, kuch bhi karo — bad practice
+      unknown → pehle type check karo phir use karo — good practice
+      Yahan any use kiya + eslint comment — acceptable tradeoff
+    ============================================================

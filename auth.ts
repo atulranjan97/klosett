@@ -3,7 +3,7 @@ import { PrismaAdapter } from '@auth/prisma-adapter';
 import { prisma } from '@/lib/prisma';
 import CredentialsProvider from 'next-auth/providers/credentials';
 import { compareSync } from 'bcrypt-ts-edge';
-import type { NextAuthConfig } from 'next-auth'; 
+import type { NextAuthConfig } from 'next-auth';
 
 export const config = {
   pages: {
@@ -17,12 +17,12 @@ export const config = {
   adapter: PrismaAdapter(prisma),
   providers: [
     CredentialsProvider({
-      // credentials: this is ultimately an object with the data(the email and the password) that comes from our form
       credentials: {
         email: { type: 'email' },
         password: { type: 'password' },
       },
       async authorize(credentials) {
+        // credentials: this is ultimately an object with the data(the email and the password) that comes from our form
         if (credentials == null) {
           return null;
         }
@@ -37,7 +37,10 @@ export const config = {
 
         // Check if the user exists and if the password matches
         if (user && user.password) {
-          const isMatch = compareSync(credentials.password as string, user.password);
+          const isMatch = compareSync(
+            credentials.password as string,
+            user.password,
+          );
 
           // If password is correct, return user
           if (isMatch) {
@@ -45,8 +48,8 @@ export const config = {
               id: user.id,
               name: user.name,
               email: user.email,
-              role: user.role
-            }
+              role: user.role,
+            };
           }
         }
 
@@ -56,19 +59,44 @@ export const config = {
     }),
   ],
   callbacks: {
+    // this session callback runs when a session is accessed, here we have access to the session itself, the token, the user etc.
     async session({ session, user, trigger, token }: any) {
       // Set the user ID from the token
-      session.user.id = token.sub;  // the json web token is gonna have a sub property on it and that's gonna be by default is the user ID
+      session.user.id = token.sub; // the json web token is gonna have a subject(a sub property on it) and that's gonna be by default the user ID
+      session.user.role = token.role;
+      session.user.name = token.name;
+
+      // console.log(token);
 
       // If there is an update, set the user name
       if (trigger === 'update') {
         session.user.name = user.name;
       }
+      // we are also gonna use the `trigger`, it's the reason why this ran, so it could be a update or sign in or whatever
+      // the reason we're doing this because we'll have a profile page where the user can update their name. They can't update their email though. So we wanna make sure when it's changed in the database that it's also changed in the session
 
-      return session
+      return session;
     },
+    async jwt({ token, user, trigger, session }: any) {
+      // Assign user fields to token
+      if (user) {
+        token.role = user.role;
 
-  }
+        // If user has no name, use email(or atleast the first part of the email, if it's atul@gmail.com then we wanna get the atul) as their default name
+        if (user.name === 'NO_NAME') {
+          token.name = user.email.split('@')[0];
+
+          // Update database to reflect the token name
+          await prisma.user.update({
+            where: { id: user.id },
+            data: { name: token.name },
+          });
+        }
+      }
+
+      return token;
+    },
+  },
 } satisfies NextAuthConfig;
 // satisfies statement ensures that the object structure, this config object is compatible with this type(NextAuthConfig), so, you can't have other things that basically aren't in this list(given in docs)
 
@@ -81,7 +109,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth(config);
 // By default NextAuth.js does not include an adapter any longer. But we're using Prisma, so, we installed the prisma adapter(npm i @auth/prisma-adapter)
 
 // And that's all we're gonna do in this callback for now. Later on we're gonna add some more stuff and we're also gonna have a JWT callback because if you want to change the data that's in the token. Because when we make a request from the client, that Json web token gets sent to the server on every request. And if you want to edit the data that's in there, and we do, we want to add the role for instance, then we have to add this callback(given below)
-  // async jwt({token, user, account, profile, isNewUsere}) {
-  //   return token
-  // }
+// async jwt({token, user, account, profile, isNewUsere}) {
+//   return token
+// }
 // but we will do this a little later
