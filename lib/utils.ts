@@ -1,5 +1,6 @@
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
+import { z } from 'zod';
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -21,11 +22,13 @@ export function formatNumberWithDecimal(num: number): string {
 }
 
 // Format errors
-// eslint-disabled-next-line @typescript-eslint/no-explicit-any
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function formatError(error: any) {
   if (error.name === 'ZodError') {
     // Handle Zod error
-    const fieldErrors = error.issues.map((issue) => issue.message);
+    const fieldErrors = error.issues.map(
+      (issue: z.core.$ZodIssue) => issue.message,
+    );
     return fieldErrors.join('. ');
   } else if (
     error.name === 'PrismaClientKnownRequestError' &&
