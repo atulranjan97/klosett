@@ -61,3 +61,26 @@ export const signUpFormSchema = z
   });
 
   // so we want to add a validation where `password` matches `confirmPassword`, for this we add a refine method on the z object which takes in a function where we can pass in data(and this data contains all these field we defined, name, email etc) and what's going to come next from this function is true or false, if its true then the validation passes, if its false then it didn't. If the condition fails we show a message 'Password don't match' in the `confirmPassword` field
+
+// Cart Schemas
+export const cartItemSchema = z.object({
+  productId: z.string().min(1, 'Product is required'),
+  name: z.string().min(1, 'Name is required'),
+  slug: z.string().min(1, 'Slug is required'),
+  qty: z.number().int().nonnegative('Quantity must be a positive number'),
+  image: z.string().min(1, 'Image is required'),
+  price: currency,
+})
+// we're just saying `min(1, ...)` because it's a required field
+
+export const insertCartSchema = z.object({
+  items: z.array(cartItemSchema),
+  itemsPrice: currency,
+  totalPrice: currency,
+  shippingPrice: currency,
+  taxPrice: currency,
+  sessionCartId: z.string().min(1, 'Session cart id is required'),
+  userId: z.string().optional().nullable(),
+})
+// items will be an array of items that will have fields specified in `cartItemsSchema`
+// making `userId` optional because we're gonna allow users to add stuff to thier cart even if they are not logged in, but then as they go through and checkout then they'll have to login. And what will happen is they'll comeback to the page they are on because we set up that whole callback URL, and their cart should still have the same items in it, because it's gonna be in the database and it's gonna be in the session
