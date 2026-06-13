@@ -52,3 +52,24 @@ export async function formatError(error: any) {
 }
 // we're gonna use type of `any` and this is the one of the rare occasions where I like to use the disable comment for TS, this will work by using `any` but when we deploy to vercel, it'll actually throw an error. So what we can do is add a comment here says `//eslint-disabled-next-line`, so we're just saying in the next line we wanna disable a certain rule and the rule we wanna disable is gonna be `@typesscript-eslint/no-explicit-any` so that will just let us use the `any` type without throwing any problem
 // you could try to get around this by bringing in certain types from Prisma and Zod, but we aren't because it was too much and too confusing, so this is one of those rare occasion where we just wanna add this comment
+
+// Round number to two decimal places
+export function round2(value: number | string) {
+  if (typeof value === 'number') {
+    return Math.round((value + Number.EPSILON) * 100) / 100; 
+  } else if(typeof value === 'string') {
+    return Math.round((Number(value) + Number.EPSILON) * 100) / 100; 
+  } else {
+    throw new Error('Value is not a number or string');
+  }
+}
+
+// export function round2(value: number | string): number {
+//   const num = Number(value);
+
+//   if (Number.isNaN(num)) {
+//     throw new Error('Value is not a valid number');
+//   }
+
+//   return Math.round((num + Number.EPSILON) * 100) / 100;
+// }

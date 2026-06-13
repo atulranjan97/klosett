@@ -84,3 +84,7 @@ export const insertCartSchema = z.object({
 })
 // items will be an array of items that will have fields specified in `cartItemsSchema`
 // making `userId` optional because we're gonna allow users to add stuff to thier cart even if they are not logged in, but then as they go through and checkout then they'll have to login. And what will happen is they'll comeback to the page they are on because we set up that whole callback URL, and their cart should still have the same items in it, because it's gonna be in the database and it's gonna be in the session
+
+// Ye naming convention ka matter hai. `insertCartSchema` naam rakhne ka purpose ye batana hai ki ye schema cart ko database me insert/create karne ke liye required data validate kar raha hai.
+// Kyunki insert karte waqt id, createdAt, updatedAt database khud generate karta hai.
+

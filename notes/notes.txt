@@ -866,4 +866,19 @@ Google Console mein jaake dono add karo:
 
 **Summary ek line mein:**
 > Adapter = Google user DB mein banata hai | JWT = Session manage karta hai | Role = DB se manually lena padta hai | Redirect URI = Google ko batao ki kaun sa URL trusted hai ✅
-    ------------------------------------------------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------
+
+
+------------------------------------------------- 47. Session cart id cookie -------------------------------------------------
+### NextAuth `authorized` Callback & Proxy — Notes
+
+`authorized` ek **NextAuth callback** hai jo decide karta hai ki kisi bhi incoming request ko allow karna hai ya block karna hai. Yeh callback **har request pe** automatically invoke hota hai — chahe user `/dashboard` khole, `/profile` khole, ya koi bhi route — aur `request` object se `request.nextUrl.pathname` ke through pata chalta hai ki user kaun sa page open karna chahta hai. Callback ke andar `auth` object hota hai jisme logged-in user ki info hoti hai, aur `request` object hota hai jisme cookies, headers, aur URL hoti hai. Return value se decide hota hai kya karna hai — `true` matlab allow karo, `false` matlab `/sign-in` pe redirect karo, aur `NextResponse` return karo agar cookie set karni ho ya custom redirect karna ho.
+
+**Lekin `authorized` akela kuch nahi kar sakta** — isko trigger karne ke liye `proxy.ts` (Next.js 16) ya `middleware.ts` (Next.js 15) zaroori hai. `proxy.ts` har incoming request ko intercept karta hai **page render hone se pehle** — aur jab hum `export { auth as proxy } from '@/auth'` likhte hain, toh NextAuth apna `auth` function proxy ke through run karta hai jo internally `authorized` callback invoke karta hai. Agar `proxy.ts` file hi nahi hai toh koi bhi request seedha page tak pahunch jayegi bina kisi check ke — protected routes bhi bina login ke khul jayenge aur guest cart ke liye `sessionCartId` cookie bhi kabhi set nahi hogi.
+
+**Practical use cases:** Protected routes ke liye check karo ki `auth?.user` hai ya nahi — nahi hai toh `false` return karo. Role-based access ke liye check karo ki `auth?.user?.role === 'admin'` hai ya nahi. Guest functionality ke liye — jaise humara cart — `sessionCartId` cookie check karo, nahi hai toh `crypto.randomUUID()` se naya ID banao aur `NextResponse` mein cookie set karke return karo. **Yaad rakho** — `authorized` sirf **routing aur access control** ke liye hai, yahan heavy database calls ya business logic nahi daalni chahiye — woh kaam Server Components aur Server Actions ka hai. 🎯
+------------------------------------------------------------------------------------------------------------
+
+
+------------------------------------------------- Number.EPSILON -------------------------------------------------
+------------------------------------------------------------------------------------------------------------

@@ -5,7 +5,8 @@ import CredentialsProvider from 'next-auth/providers/credentials';
 import { compareSync } from 'bcrypt-ts-edge';
 import type { NextAuthConfig } from 'next-auth';
 import GoogleProvider from 'next-auth/providers/google';
-import { Param } from '@prisma/client/runtime/client';
+import { cookies } from 'next/headers';
+import { NextResponse } from 'next/server';
 
 export const config = {
   pages: {
@@ -120,8 +121,32 @@ export const config = {
 
       return token;
     },
-    // Invoked on successfull sign in
-    // async signIn()
+    // Invoked when user need authorization, using middleware or proxy
+    authorized({ request, auth }: any) {
+      // Check for session cart cookie
+      if (!request.cookies.get('sessionCartId')) {
+        // Generate new session cart id cookie
+        const sessionCartId = crypto.randomUUID();
+
+        // Clone the request headers
+        const newRequestHeaders = new Headers(request.headers);
+
+        // Create new response and add the new headers
+        const response = NextResponse.next({
+          request: {
+            headers: newRequestHeaders,
+          },
+        });
+
+        // Set the newly generated sessionCartId in the response cookies
+        response.cookies.set('sessionCartId', sessionCartId);
+
+        // Return the response with the sessionCartId set
+        return response;
+      } else {
+        return true;
+      }
+    },
   },
 } satisfies NextAuthConfig;
 // satisfies statement ensures that the object structure, this config object is compatible with this type(NextAuthConfig), so, you can't have other things that basically aren't in this list(given in docs)
