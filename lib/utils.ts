@@ -2,10 +2,12 @@ import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 import { z } from 'zod';
 
+// <-------------------------------------------------------------------------------------------------------------------->
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
+// <-------------------------------------------------------------------------------------------------------------------->
 // Convert prisma object into a regular JS object
 export function convertToPlainObject<T>(value: T): T {
   return JSON.parse(JSON.stringify(value));
@@ -15,12 +17,17 @@ export function convertToPlainObject<T>(value: T): T {
 // :T : this is for the return of the function, the return type, it specifies that it should be the same type as the input
 // so, if you called a function with a product object then TS knows that the return value will also be the type of product
 
+// <-------------------------------------------------------------------------------------------------------------------->
 // Format number with decimal places
 export function formatNumberWithDecimal(num: number): string {
   const [int, decimal] = num.toString().split('.');
   return decimal ? `${int}.${decimal.padEnd(2, '0')}` : `${int}.00`;
 }
 
+// The `padEnd()` method pads a string at the end with another string (multiple times) until it reaches a given length.
+// '27'.padEnd(5, '0') -> output: '27000'
+
+// <-------------------------------------------------------------------------------------------------------------------->
 // Format errors
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function formatError(error: any) {
@@ -53,12 +60,13 @@ export async function formatError(error: any) {
 // we're gonna use type of `any` and this is the one of the rare occasions where I like to use the disable comment for TS, this will work by using `any` but when we deploy to vercel, it'll actually throw an error. So what we can do is add a comment here says `//eslint-disabled-next-line`, so we're just saying in the next line we wanna disable a certain rule and the rule we wanna disable is gonna be `@typesscript-eslint/no-explicit-any` so that will just let us use the `any` type without throwing any problem
 // you could try to get around this by bringing in certain types from Prisma and Zod, but we aren't because it was too much and too confusing, so this is one of those rare occasion where we just wanna add this comment
 
+// <-------------------------------------------------------------------------------------------------------------------->
 // Round number to two decimal places
 export function round2(value: number | string) {
   if (typeof value === 'number') {
-    return Math.round((value + Number.EPSILON) * 100) / 100; 
-  } else if(typeof value === 'string') {
-    return Math.round((Number(value) + Number.EPSILON) * 100) / 100; 
+    return Math.round((value + Number.EPSILON) * 100) / 100;
+  } else if (typeof value === 'string') {
+    return Math.round((Number(value) + Number.EPSILON) * 100) / 100;
   } else {
     throw new Error('Value is not a number or string');
   }

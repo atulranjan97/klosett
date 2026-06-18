@@ -104,7 +104,9 @@ export default ProductDetailsPage;
     sab valid hai.
 */
 
-// `notFound` Next.js App Router ka built-in function hai jo 404 page render karne ke liye use hota hai. Isko "next/navigation" se import kiya jata hai. Jab kisi page ka required data exist nahi karta — jaise database me requested product, user, ya blog post na mile — tab `notFound()` call kiya jata hai. Ye internally ek special Next.js error throw karta hai jise framework catch karke default 404 page ya custom not-found.tsx component render karta hai. Example: if (!product) notFound(); ka matlab hai agar product null ya undefined hai to normal UI render mat karo, directly “Page Not Found” dikhao. Ye mostly dynamic routes ([slug], [id]) me use hota hai.
+// `notFound` Next.js App Router ka built-in function hai jo 404 page render karne ke liye use hota hai. Isko "next/navigation" se import kiya jata hai. Jab kisi page ka required data exist nahi karta — jaise database me requested product, user, ya blog post na mile — tab `notFound()` call kiya jata hai. Ye internally ek special Next.js error throw karta hai jise framework catch karke default 404 page ya custom not-found.tsx component render karta hai. 
+// Example: if (!product) notFound(); ka matlab hai agar product null ya undefined hai to normal UI render mat karo, directly “Page Not Found” dikhao. Ye mostly dynamic routes ([slug], [id]) me use hota hai.
+
 
 // npx shadcn@latest add badge
 // that's gonna be for the stock option

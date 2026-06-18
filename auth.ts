@@ -139,7 +139,10 @@ export const config = {
         });
 
         // Set the newly generated sessionCartId in the response cookies
-        response.cookies.set('sessionCartId', sessionCartId);
+        // response.cookies.set('sessionCartId', sessionCartId);
+        response.cookies.set('sessionCartId', sessionCartId, {
+          maxAge: 7 * 24 * 60 * 60, // 7 days
+        });
 
         // Return the response with the sessionCartId set
         return response;
@@ -164,3 +167,11 @@ export const { handlers, auth, signIn, signOut } = NextAuth(config);
 //   return token
 // }
 // but we will do this a little later
+
+// response.cookies.set('sessionCartId', sessionCartId, {
+//   maxAge: 60 * 60 * 24 * 30, // 30 days in seconds
+//   httpOnly: true,
+//   secure: process.env.NODE_ENV === 'production',
+//   sameSite: 'lax',
+//   path: '/',
+// });

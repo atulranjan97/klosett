@@ -123,3 +123,6 @@ model Cart {
 // cart and the user will have the relationship
 // we also want to add user because we need to add a relationship so we can have the userId(Cart model) pertain to the id(User model)
 // Now, `userId` in this Cart model is going to reference the `id` in the User model
+// items Json[]: Iska matlab — "Ek array store karo, jisme har cheez JSON hogi". Database ko nahi pata andar kya hoga. Bas jaanta hai — "JSON aayega, store kar lunga."
+// Jab tum Prisma schema mein kisi field ko Json[] type dete ho, toh Prisma database ko sirf itna batata hai ki "yahan JSON objects ka array store hoga". Database ko andar ka structure nahi pata — koi bhi JSON shape aa sakta hai. Isliye Prisma apne code mein iske liye ek generic type generate karta hai jiska naam hota hai InputJsonValue[] ya Prisma.CartUpdateitemsInput[]. Yeh basically ek "anything JSON" type hai.
+// Prisma Json[] field ke liye apna generic type use karta hai, humari CartItem[] type se match nahi karta — isliye as se forcefully cast karna padta hai.

@@ -5,6 +5,7 @@ import { formatNumberWithDecimal } from './utils';
 
 // you might have different schema for updating the products
 
+// <-------------------------------------------------------------------------------------------------------------------->
 const currency = z
   .string()
   .refine(
@@ -12,6 +13,7 @@ const currency = z
     'Price must have exactly two decimal places',
   );
 
+// <-------------------------------------------------------------------------------------------------------------------->
 // Schema for inserting products
 export const insertProductSchema = z.object({
   name: z.string().min(3, 'Name must be atleat 3 characters'),
@@ -28,7 +30,7 @@ export const insertProductSchema = z.object({
 // this is very convenient because we're not gonna have to add this validation ourselves later on within actions or whatever we're submitting forms
 // we wanted `stock` to be a number but it's gonna come in as a string, most likely from a form. what we do is we'll write `z.coerce.number()`, so it'll coerce it to a number.
 // banner: z.string().nullable(), banner is gonna be a string but its going to be optional so we're gonna add on to that with `nullable()`
-// there's one more field I wanna add which is the price, but price need to formatted with precision because it needs to have two decimal points, something like 49.99, we don't want 49.9 or 49.99999. So, it's really important to format it correctly because it deals with taxes and totals and all that stuff so you really have to make sure your price is formatted correctly.
+// there's one more field I wanna add which is the price, but price need to formatted with precision because it needs to have two decimal points, something like 49.99, we don't want 49.9 or 49.99999. So, it's really important to format it correctly because it deals with taxes, totals and all that stuff so you really have to make sure your price is formatted correctly.
 
 // now we're going to create a helper function for this.
 // let's see how we can infer our Zod schema into our `type` file
@@ -38,6 +40,7 @@ export const insertProductSchema = z.object({
 // now our insertProductSchema is all set for when we want to use that. Whenever we create that functionality and we need this validation.
 // Given any Zod schema, use `.parse` to validate an input. If it's valid, Zod returns a strongly-typed deep clone of the input.
 
+// <-------------------------------------------------------------------------------------------------------------------->
 // Schema for signing users in
 export const signInFormSchema = z.object({
   // email: z.string().email('Invalid email address'),
@@ -45,6 +48,7 @@ export const signInFormSchema = z.object({
   password: z.string().min(6, 'Password must be atleast 6 characters'),
 });
 
+// <-------------------------------------------------------------------------------------------------------------------->
 // Schema for signing up a user
 export const signUpFormSchema = z
   .object({
@@ -60,8 +64,9 @@ export const signUpFormSchema = z
     path: ['confirmPassword'],
   });
 
-  // so we want to add a validation where `password` matches `confirmPassword`, for this we add a refine method on the z object which takes in a function where we can pass in data(and this data contains all these field we defined, name, email etc) and what's going to come next from this function is true or false, if its true then the validation passes, if its false then it didn't. If the condition fails we show a message 'Password don't match' in the `confirmPassword` field
+// so we want to add a validation where `password` matches `confirmPassword`, for this we add a refine method on the z object which takes in a function where we can pass in data(and this data contains all these field we defined, name, email etc) and what's going to come next from this function is true or false, if its true then the validation passes, if its false then it didn't. If the condition fails we show a message 'Password don't match' in the `confirmPassword` field
 
+// <-------------------------------------------------------------------------------------------------------------------->
 // Cart Schemas
 export const cartItemSchema = z.object({
   productId: z.string().min(1, 'Product is required'),
@@ -70,9 +75,10 @@ export const cartItemSchema = z.object({
   qty: z.number().int().nonnegative('Quantity must be a positive number'),
   image: z.string().min(1, 'Image is required'),
   price: currency,
-})
+});
 // we're just saying `min(1, ...)` because it's a required field
 
+// <-------------------------------------------------------------------------------------------------------------------->
 export const insertCartSchema = z.object({
   items: z.array(cartItemSchema),
   itemsPrice: currency,
@@ -81,10 +87,9 @@ export const insertCartSchema = z.object({
   taxPrice: currency,
   sessionCartId: z.string().min(1, 'Session cart id is required'),
   userId: z.string().optional().nullable(),
-})
+});
 // items will be an array of items that will have fields specified in `cartItemsSchema`
 // making `userId` optional because we're gonna allow users to add stuff to thier cart even if they are not logged in, but then as they go through and checkout then they'll have to login. And what will happen is they'll comeback to the page they are on because we set up that whole callback URL, and their cart should still have the same items in it, because it's gonna be in the database and it's gonna be in the session
 
 // Ye naming convention ka matter hai. `insertCartSchema` naam rakhne ka purpose ye batana hai ki ye schema cart ko database me insert/create karne ke liye required data validate kar raha hai.
 // Kyunki insert karte waqt id, createdAt, updatedAt database khud generate karta hai.
-
