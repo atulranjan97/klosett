@@ -15,6 +15,7 @@ const ProductCard = ({ product }: { product: Product }) => {
             height={300}
             width={300}
             priority={true}
+            className='mx-auto'
           />
         </Link>
       </CardHeader>
@@ -27,8 +28,8 @@ const ProductCard = ({ product }: { product: Product }) => {
           <p>{product.rating} Stars</p>
           {product.stock > 0 ? (
             <ProductPrice value={Number(product.price)} />
-            // <ProductPrice value={Number(product.price)} className='text-red-500' />
           ) : (
+            // <ProductPrice value={Number(product.price)} className='text-red-500' />
             <p className="text-destructive">Out Of Stock</p>
           )}
         </div>

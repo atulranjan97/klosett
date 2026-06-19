@@ -5,6 +5,7 @@ import { notFound } from 'next/navigation';
 import ProductPrice from '@/components/shared/product/product-price';
 import ProductImages from '@/components/shared/product/product-images';
 import AddToCart from '@/components/shared/product/add-to-cart';
+import { getMyCart } from '@/lib/actions/cart.actions';
 
 const ProductDetailsPage = async (props: {
   params: Promise<{ slug: string }>;
@@ -12,8 +13,9 @@ const ProductDetailsPage = async (props: {
   const { slug } = await props.params;
 
   const product = await getProductBySlug(slug);
-
   if (!product) notFound();
+
+  const cart = await getMyCart();
 
   return (
     <section>
@@ -66,6 +68,7 @@ const ProductDetailsPage = async (props: {
                 <div className="flex-center">
                   {/* Add to cart component */}
                   <AddToCart
+                    cart={cart}
                     item={{
                       productId: product.id,
                       name: product.name,
@@ -104,9 +107,8 @@ export default ProductDetailsPage;
     sab valid hai.
 */
 
-// `notFound` Next.js App Router ka built-in function hai jo 404 page render karne ke liye use hota hai. Isko "next/navigation" se import kiya jata hai. Jab kisi page ka required data exist nahi karta — jaise database me requested product, user, ya blog post na mile — tab `notFound()` call kiya jata hai. Ye internally ek special Next.js error throw karta hai jise framework catch karke default 404 page ya custom not-found.tsx component render karta hai. 
+// `notFound` Next.js App Router ka built-in function hai jo 404 page render karne ke liye use hota hai. Isko "next/navigation" se import kiya jata hai. Jab kisi page ka required data exist nahi karta — jaise database me requested product, user, ya blog post na mile — tab `notFound()` call kiya jata hai. Ye internally ek special Next.js error throw karta hai jise framework catch karke default 404 page ya custom not-found.tsx component render karta hai.
 // Example: if (!product) notFound(); ka matlab hai agar product null ya undefined hai to normal UI render mat karo, directly “Page Not Found” dikhao. Ye mostly dynamic routes ([slug], [id]) me use hota hai.
-
 
 // npx shadcn@latest add badge
 // that's gonna be for the stock option

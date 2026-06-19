@@ -880,5 +880,8 @@ Google Console mein jaake dono add karo:
 ------------------------------------------------------------------------------------------------------------
 
 
-------------------------------------------------- Number.EPSILON -------------------------------------------------
+------------------------------------------------- Number.EPSILON ------------------------------------------------- 
+
+--------------------------------------------------- useTransition() ---------------------------------------------------
+useTransition(): A react hook that helps manage UI updates by allowing you to mark certain updates as transitions. And transition are typically non-urgent updates that can be deffered to improve user experience, things like showing a loading spinner while that update happens and it provide two values, `isPending` which is a boolean that indicates whether the transition is ongoing, and `startTransition` 
 ------------------------------------------------------------------------------------------------------------
