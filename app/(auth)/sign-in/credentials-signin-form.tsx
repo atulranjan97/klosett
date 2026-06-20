@@ -10,6 +10,7 @@ import { useFormStatus } from 'react-dom';
 import { signInWithCredentials } from '@/lib/actions/user.actions';
 import { useSearchParams } from 'next/navigation';
 import { signInWithGoogle } from '@/lib/actions/user.actions';
+import Image from 'next/image';
 
 // We want to use the `useFormStatus` hook to kind of make the `Sign In` button a little more interactive and have some user feedback, for that we're gonna create mini component for sign in button
 const SignInButton = () => {
@@ -95,6 +96,7 @@ const CredentialsSignInForm = () => {
           variant="outline"
           className="w-full cursor-pointer"
         >
+          <Image src='/images/google-logo-2.png' alt='google-logo' width={20} height={20} />
           Sign In with Google
         </Button>
       </form>

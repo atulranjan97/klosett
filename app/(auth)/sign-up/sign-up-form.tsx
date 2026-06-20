@@ -130,3 +130,5 @@ const SignUpForm = () => {
 };
 
 export default SignUpForm;
+
+// `link` is a custom class defined in globals.css
