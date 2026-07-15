@@ -14,8 +14,27 @@ const sampleData = {
       password: hashSync('123456', 10),
       role: 'user',
     },
-    // password has to be hashed even though this is just a demo user or whatever, we're gonna hash the password and we're gonna be using the bcrypt library, however we're using the typescript and we're also using serverless environment so there's a package which is basically bcrypt, its the same thing, its the Bcrypt library with some additions to it to support typescript and to support edge(which allows us to run it in serverless environment), So, it's called `bcrypt-ts-edge`, so that's what we're gonna use, `npm i bcrypt-ts-edge`. The method(functions) and everything is gonna be all the same as regular `bcryptjs`
-    // A salt is a random value added to the password before hashing it to make it more secure. And that makes it so that even though two users have the same password, their hashed outputs are different. And then the rounds is the computational complexity of the hashing process, so the more salt the more secure, also the more computing power it takes. so 10 is usually the recommended
+    // Even though this is just demo/seed data, passwords should NEVER be stored as plain text.
+    // We hash the password before saving it so that the actual password is never stored in the database.
+    // We're using `bcrypt-ts-edge` instead of the regular `bcrypt` or `bcryptjs` because this project runs in a TypeScript + Edge/Serverless environment (such as Next.js Edge Runtime). This package provides the same bcrypt API while being compatible with Edge runtimes where the native bcrypt package cannot be used.
+    //
+    // `hashSync(password, saltRounds)` takes two arguments:
+    //   1. The plain-text password.
+    //   2. The number of salt rounds (cost factor).
+    //
+    // A salt is a randomly generated value that bcrypt automatically adds to the password before hashing.
+    // This prevents identical passwords from producing identical hashes. For example, if two users choose
+    // the password "123456", their stored password hashes will still be completely different because each
+    // hash gets its own unique salt.
+    //
+    // The second argument (`10`) is the salt rounds (also called the cost factor). It determines how much
+    // computational work bcrypt performs while generating the hash. A higher value increases security by
+    // making brute-force attacks more expensive, but it also takes longer to hash passwords. A value of
+    // 10 is a common and well-balanced default for most applications.
+    //
+    // Note: Although we're using `hashSync()` here for simplicity while seeding data, in production
+    // request handlers it's generally recommended to use the asynchronous `hash()` function to avoid
+    // blocking the event loop.
   ],
   products: [
     {

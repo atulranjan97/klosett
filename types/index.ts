@@ -3,9 +3,10 @@ import {
   insertProductSchema,
   insertCartSchema,
   cartItemSchema,
+  shippingAddressSchema,
 } from '@/lib/validators';
 
-// We can use `z.infer` to basically bring in all the fields from (validators.ts) into our type. That way we're not repeating ourselves.
+// We can use `z.infer` to basically bring in all the fields from (validators.ts) into our type. That way we don't have to repeat ourselves and be redundant. It would just inferring it from our zod schema
 
 // <-------------------------------------------------------------------------------------------------------------------->
 export type Product = z.infer<typeof insertProductSchema> & {
@@ -23,3 +24,6 @@ export type Cart = z.infer<typeof insertCartSchema>;
 
 // <-------------------------------------------------------------------------------------------------------------------->
 export type CartItem = z.infer<typeof cartItemSchema>;
+
+// <-------------------------------------------------------------------------------------------------------------------->
+export type ShippingAddress = z.infer<typeof shippingAddressSchema>;

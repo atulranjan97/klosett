@@ -94,6 +94,7 @@ export const config = {
     async jwt({ token, user, account, trigger, session }: any) {
       // Assign user fields to token
       if (user) {
+        token.id = user.id;
         token.role = user.role;
 
         // If user has no name, use email(or atleast the first part of the email, if it's atul@gmail.com then we wanna get the atul) as their default name
@@ -106,6 +107,32 @@ export const config = {
             data: { name: token.name },
           });
         }
+
+        if (trigger === 'signIn' || trigger === 'signUp') {
+          const cookiesObject = await cookies();
+          const sessionCartId = cookiesObject.get('sessionCartId')?.value;
+
+          if (sessionCartId) {
+            const sessionCart = await prisma.cart.findFirst({
+              where: { sessionCartId },
+            });
+
+            if (sessionCart) {
+              // delete current/existing user cart
+              await prisma.cart.deleteMany({
+                where: { userId: user.id },
+              });
+
+              // Assign new cart
+              await prisma.cart.update({
+                where: { id: sessionCart.id },
+                data: { userId: user.id },
+              });
+            }
+          }
+        }
+        // Please note that `signIn` is case-sensitive. Make sure the `I` is uppercase.
+        // Please note that `signUp` is case-sensitive. Make sure the `U` is uppercase.
       }
 
       // Handle Google login — fetch role from DB since Google doesn't provide it
@@ -123,6 +150,25 @@ export const config = {
     },
     // Invoked when user need authorization, using middleware or proxy
     authorized({ request, auth }: any) {
+      // Array of regex patterns of paths we want to protect
+      const protectedPaths = [
+        /\/shipping-address/,
+        /\/payment-method/,
+        /\/place-order/,
+        /\/profile/,
+        /\/user\/(.*)/, // user/anything-here
+        /\/order\/(.*)/, // order/anything-here
+        /\/admin/,
+      ];
+
+      // Get pathname from the req URL object
+      const { pathname } = request.nextUrl; // this will give us the page we're on
+
+      // Check if user is not authenticated and accessing a protected path
+      if (!auth && protectedPaths.some((p) => p.test(pathname))) return false;
+      // so return false will redirect user to our sign-in page
+      // and we're using regex patterns because we're gonna match them against the path name using the `test` method which takes in a regular expression
+
       // Check for session cart cookie
       if (!request.cookies.get('sessionCartId')) {
         // Generate new session cart id cookie

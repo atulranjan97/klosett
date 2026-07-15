@@ -1,11 +1,18 @@
 'use server';
-import { signInFormSchema, signUpFormSchema } from '../validators';
-import { signIn, signOut } from '@/auth';
+import {
+  shippingAddressSchema,
+  signInFormSchema,
+  signUpFormSchema,
+} from '../validators';
+import { auth, signIn, signOut } from '@/auth';
 import { isRedirectError } from 'next/dist/client/components/redirect-error';
 import { hashSync } from 'bcrypt-ts-edge';
 import { prisma } from '../prisma';
 import { formatError } from '../utils';
+import { ShippingAddress } from '@/types';
+import { success } from 'zod';
 
+// <------------------------------------------------------------------------------------->
 // sign in the user with credentials
 // we're being specific with credentials meaning that it's using the credentialsProvider because you might have other actions that deal with Google, Github etc you might use for sign in.
 export async function signInWithCredentials(
@@ -37,12 +44,14 @@ export async function signInWithCredentials(
 }
 // its gonna take in two thing and the reason its going to take these in is because when we create the form, we're going to use a new react hook called `useActionState`. And when you submit an action with that `useActionState` hook, the first argument is gonna be the previous state, and the second thing will be the actual formData and that will have a type of `FormData` coz remember when we have actions, you can actually put the action into the action attribute of the form tag in the HTML or in the JSX
 
+// <------------------------------------------------------------------------------------->
 // Sign user out
 export async function signOutUser() {
   await signOut();
 }
 // that will sign it out and will kill the cookie and the token and do everything that it needs to behind the scenes.
 
+// <------------------------------------------------------------------------------------->
 // Sign up user
 export async function signUpUser(prevState: unknown, formData: FormData) {
   try {
@@ -94,9 +103,10 @@ export async function signUpUser(prevState: unknown, formData: FormData) {
 }
 // where we create our signup form, we'll be using `useActionState` and {success:..., message:...} will be the state for this action's response
 
+// <------------------------------------------------------------------------------------->
 // Sign in with Google// Sign in with Google
 export async function signInWithGoogle(formData: FormData) {
-  const callbackUrl = formData.get('callbackUrl') as string || '/';
+  const callbackUrl = (formData.get('callbackUrl') as string) || '/';
   await signIn('google', { redirectTo: callbackUrl });
 }
 // To add a signInWithGoogle action, it's actually much simpler than the credentials one since Google handles the auth flow:
@@ -105,3 +115,45 @@ export async function signInWithGoogle(formData: FormData) {
 
 // That `!` is TypeScript's Non-null Assertion Operator.
 // It tells TypeScript: "Trust me, this value will NOT be null or undefined at runtime."
+
+// <------------------------------------------------------------------------------------->
+// Get user by the ID
+export async function getUserById(userId: string) {
+  const user = await prisma.user.findFirst({
+    where: {
+      id: userId,
+    },
+  });
+
+  if (!user) throw new Error('User not found');
+
+  return user;
+}
+
+// <------------------------------------------------------------------------------------->
+// Update the user's address
+export async function updateUserAddress(data: ShippingAddress) {
+  try {
+    const session = await auth();
+
+    const currentUser = await prisma.user.findFirst({
+      where: { id: session?.user?.id },
+    });
+
+    if (!currentUser) throw new Error('User not found');
+
+    const address = shippingAddressSchema.parse(data);
+
+    await prisma.user.update({
+      where: { id: currentUser.id },
+      data: { address }, // data: {address: address}
+    });
+
+    return {
+      success: true,
+      message: 'User updated successfully',
+    };
+  } catch (error) {
+    return { success: false, message: formatError(error) };
+  }
+}

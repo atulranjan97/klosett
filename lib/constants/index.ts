@@ -1,4 +1,5 @@
 export const APP_NAME = process.env.NEXT_PUBLIC_APP_NAME || 'Klosett';
+export const APP_LOGO = '/images/logo-2.png'
 export const APP_DESCRIPTION =
   process.env.NEXT_PUBLIC_APP_DESCRIPTION ||
   'A modern ecommerce store built with Next.js';
@@ -10,7 +11,7 @@ export const SERVER_URL =
 export const LATEST_PRODUCTS_LIMIT =
   Number(process.env.LATEST_PRODUCTS_LIMIT) || 4;
 
-// make sure to set email and password an empty string before pushing changes to production
+// make sure to set all fields to an empty string before pushing changes to production
 export const signInDefaultValues = {
   email: '',
   password: '',
@@ -21,4 +22,12 @@ export const signUpDefaultValues = {
   email: '',
   password: '',
   confirmPassword: '',
+};
+
+export const shippingAddressDefaultValues = {
+  fullName: '',
+  streetAddress: '',
+  city: '',
+  postalCode: '',
+  country: '',
 };

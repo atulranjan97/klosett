@@ -13,6 +13,12 @@ const HomePage = async () => {
 
   return (
     <>
+      {/* REMOVE IT ONCE WEBSITE IS COMPLETED */}
+      <div className="text-center text-destructive">
+        🚧 The website is currently under development. Some features may be
+        incomplete or subject to change. Thank you for visiting!
+      </div>
+
       {/* <ProductList data={sampleData.products} title="Newest Arrivals" limit={4} /> */}
       <ProductList data={latestProducts} title="Newest Arrivals" limit={4} />
     </>

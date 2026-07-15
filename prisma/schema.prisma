@@ -52,6 +52,8 @@ model User {
   session       Session[]
   carts         Cart[]
 }
+// Yahan `address` ek `Json` column hai, aur `?` ka matlab hai ye null bhi ho sakta hai.
+// Database level pe `Json` type ka matlab hota hai — "isme kuch bhi store ho sakta hai" — object, array, string, number, true/false, ya null. Database ko ya Prisma ko ye nahi pata ki tum usme exactly `{fullName, streetAddress, city, ...}` jaisa object store karoge. Wo bas generic "JSON blob" maanta hai.
 
 model Account {
   userId            String  @db.Uuid

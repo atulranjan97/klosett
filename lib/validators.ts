@@ -76,7 +76,7 @@ export const cartItemSchema = z.object({
   image: z.string().min(1, 'Image is required'),
   price: currency,
 });
-// we're just saying `min(1, ...)` because it's a required field
+// we're just saying `min(1, ...)` because we want to make it a required field
 
 // <-------------------------------------------------------------------------------------------------------------------->
 export const insertCartSchema = z.object({
@@ -93,3 +93,15 @@ export const insertCartSchema = z.object({
 
 // Ye naming convention ka matter hai. `insertCartSchema` naam rakhne ka purpose ye batana hai ki ye schema cart ko database me insert/create karne ke liye required data validate kar raha hai.
 // Kyunki insert karte waqt id, createdAt, updatedAt database khud generate karta hai.
+
+// <-------------------------------------------------------------------------------------------------------------------->
+// Schema for the shipping address
+export const shippingAddressSchema = z.object({
+  fullName: z.string().min(3, 'Name must be atleast 3 characters'),
+  streetAddress: z.string().min(3, 'Address must be atleast 3 characters'),
+  city: z.string().min(3, 'City must be atleast 3 characters'),
+  postalCode: z.string().min(3, 'Postal code must be atleast 3 characters'),
+  country: z.string().min(3, 'Country must be atleast 3 characters'),
+  lat: z.string().optional(),
+  lng: z.string().optional(),
+});
